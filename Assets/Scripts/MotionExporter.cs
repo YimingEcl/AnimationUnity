@@ -61,11 +61,6 @@ public class MotionExporter : MonoBehaviour
                             Lines[i] += "0 0 0 1 0 ";
                             break;
                         }
-                        case Module.ID.Action:
-                        {
-                            Lines[i] += "0 1 0 0 0 ";
-                            break;
-                        }
                         case Module.ID.Velocity:
                         {
                             VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
