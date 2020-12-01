@@ -5,7 +5,7 @@ using UnityEditor;
 
 public class MotionEditor : MonoBehaviour
 {
-    public Avatar Avatar = null;
+    public Actor Actor = null;
     public MotionData[] Files = new MotionData[0];
     public string Folder = string.Empty;
     public int Index = 0;
@@ -18,10 +18,10 @@ public class MotionEditor : MonoBehaviour
     
     public void LoadBoneMapping()
     {
-        BoneMapping = new int[GetAvatar().Bones.Length];
-        for(int i = 0; i < GetAvatar().Bones.Length; i++)
+        BoneMapping = new int[GetActor().Bones.Length];
+        for(int i = 0; i < GetActor().Bones.Length; i++)
         {
-            MotionData.Hierarchy.Bone bone = Data.Root.FindBone(GetAvatar().Bones[i].GetName());
+            MotionData.Hierarchy.Bone bone = Data.Root.FindBone(GetActor().Bones[i].GetName());
             BoneMapping[i] = bone == null ? -1 : bone.Index;
         }
     }
@@ -32,7 +32,7 @@ public class MotionEditor : MonoBehaviour
             BoneMapping = new int[0];
         else
         {
-            if (BoneMapping == null || BoneMapping.Length != GetAvatar().Bones.Length)
+            if (BoneMapping == null || BoneMapping.Length != GetActor().Bones.Length)
             {
                 LoadBoneMapping();
             }
@@ -44,15 +44,15 @@ public class MotionEditor : MonoBehaviour
         return Data;
     }
 
-    public Avatar GetAvatar()
+    public Actor GetActor()
     {
-        if (Avatar != null)
-            return Avatar;
-        if (Avatar == null)
+        if (Actor != null)
+            return Actor;
+        if (Actor == null)
         {
-            Avatar = Data.CreateAvatar();
+            Actor = Data.CreateActor();
         }
-        return Avatar;
+        return Actor;
     }
 
     public Frame GetCurrentFrame()
@@ -109,7 +109,7 @@ public class MotionEditor : MonoBehaviour
     public void LoadFrame(float timestamp)
     {
         Timestamp = timestamp;
-        Avatar avatar = GetAvatar();
+        Actor avatar = GetActor();
         Frame frame = GetCurrentFrame();
         Matrix4x4 root = frame.GetBoneTransformation(0, true);
         avatar.transform.position = root.GetPosition();
@@ -211,7 +211,7 @@ public class MotionEditor : MonoBehaviour
 
         public override void OnInspectorGUI()
         {
-            Target.Avatar = (Avatar)EditorGUILayout.ObjectField("Avatar", Target.Avatar, typeof(Avatar), true);
+            Target.Actor = (Actor)EditorGUILayout.ObjectField("Actor", Target.Actor, typeof(Actor), true);
 
             EditorGUILayout.BeginHorizontal();
             Target.Folder = EditorGUILayout.TextField("Folder", "Assets/" + Target.Folder.Substring(Mathf.Min(7, Target.Folder.Length)));
@@ -268,8 +268,8 @@ public class MotionEditor : MonoBehaviour
                     EditorGUILayout.EndHorizontal();
                 }
 
-                if (GUILayout.Button("Create Avatar"))
-                    Target.Data.CreateAvatar();
+                if (GUILayout.Button("Create Actor"))
+                    Target.Data.CreateActor();
 
                 {
                     EditorGUILayout.BeginHorizontal();

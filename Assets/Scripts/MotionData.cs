@@ -40,15 +40,15 @@ public class MotionData : ScriptableObject
         return Frames[Mathf.Clamp(Mathf.RoundToInt(time * Framerate), 0, Frames.Length - 1)];
     }
 
-    public Avatar CreateAvatar()
+    public Actor CreateActor()
     {
-        Avatar avatar = new GameObject("Skeleton").AddComponent<Avatar>();
+        Actor actor = new GameObject("Skeleton").AddComponent<Actor>();
         List<Transform> instances = new List<Transform>();
 
         for(int i = 0; i < Root.Bones.Length; i++)
         {
             Transform instance = new GameObject(Root.Bones[i].Name).transform;
-            instance.SetParent(Root.Bones[i].Parent == "None" ? avatar.GetRoot() : avatar.FindTransform(Root.Bones[i].Parent));
+            instance.SetParent(Root.Bones[i].Parent == "None" ? actor.GetRoot() : actor.FindTransform(Root.Bones[i].Parent));
             Matrix4x4 matrix = Frames.First().GetBoneTransformation(i, true);
             instance.position = matrix.GetPosition();
             instance.rotation = matrix.GetRotation();
@@ -56,11 +56,11 @@ public class MotionData : ScriptableObject
             instances.Add(instance);
         }
 
-        Transform root = avatar.FindTransform(Root.Bones[0].Name);
+        Transform root = actor.FindTransform(Root.Bones[0].Name);
         root.position = new Vector3(0f, root.position.y, 0f);
         root.rotation = Quaternion.Euler(root.eulerAngles.x, 0f, root.eulerAngles.z);
-        avatar.ExtractSkeleton(instances.ToArray());
-        return avatar;
+        actor.ExtractSkeleton(instances.ToArray());
+        return actor;
     }
 
     public Module AddModule(Module.ID type)

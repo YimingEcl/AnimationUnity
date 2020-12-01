@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-public class Avatar : MonoBehaviour
+public class Actor : MonoBehaviour
 {
 	public Bone[] Bones = new Bone[0];
 
@@ -146,7 +146,7 @@ public class Avatar : MonoBehaviour
 	[Serializable]
 	public class Bone
 	{
-		public Avatar Avatar;
+		public Actor Actor;
 		public Transform Transform;
 		public Vector3 Velocity;
 		public Vector3 Acceleration;
@@ -156,9 +156,9 @@ public class Avatar : MonoBehaviour
 		public int[] Childs;
 		public float Length;
 
-		public Bone(Avatar avatar, Transform transform, int index)
+		public Bone(Actor avatar, Transform transform, int index)
 		{
-			Avatar = avatar;
+			Actor = avatar;
 			Transform = transform;
 			Velocity = Vector3.zero;
 			Acceleration = Vector3.zero;
@@ -175,12 +175,12 @@ public class Avatar : MonoBehaviour
 
 		public Bone GetParent()
 		{
-			return Parent == -1 ? null : Avatar.Bones[Parent];
+			return Parent == -1 ? null : Actor.Bones[Parent];
 		}
 
 		public Bone GetChild(int index)
 		{
-			return index >= Childs.Length ? null : Avatar.Bones[Childs[index]];
+			return index >= Childs.Length ? null : Actor.Bones[Childs[index]];
 		}
 
 		public void SetLength(float value)
@@ -207,14 +207,14 @@ public class Avatar : MonoBehaviour
 		}
 	}
 
-	[CustomEditor(typeof(Avatar))]
-	public class AvatarEditor : Editor
+	[CustomEditor(typeof(Actor))]
+	public class ActorEditor : Editor
 	{
-		public Avatar Target;
+		public Actor Target;
 
 		private void Awake()
 		{
-			Target = (Avatar)target;
+			Target = (Actor)target;
 		}
 
 		public override void OnInspectorGUI()
