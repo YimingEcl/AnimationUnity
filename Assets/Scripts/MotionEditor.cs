@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -12,29 +13,39 @@ public class MotionEditor : MonoBehaviour
     public bool Playing = false;
 
     private float Timestamp = 0.0f;
-
-    private int[] BoneMapping = new int[0];
+    private BoneMap[] Map = null;
     private MotionData Data = null;
-    
-    public void LoadBoneMapping()
+
+    [Serializable]
+    private struct BoneMap
     {
-        BoneMapping = new int[GetActor().Bones.Length];
-        for(int i = 0; i < GetActor().Bones.Length; i++)
+        public string BvhBoneName;
+        public Transform ActorBoneTransform;
+    }
+
+    public void AutoMap()
+    {
+        Map = new BoneMap[Data.Root.Bones.Length];
+        for (int i = 0; i < Data.Root.Bones.Length; i++)
         {
-            MotionData.Hierarchy.Bone bone = Data.Root.FindBone(GetActor().Bones[i].GetName());
-            BoneMapping[i] = bone == null ? -1 : bone.Index;
+            Map[i].BvhBoneName = Data.Root.Bones[i].Name;
+            Actor.Bone bone = GetActor().FindBoneContains(Data.Root.Bones[i].Name);
+            if (bone == null)
+                Map[i].ActorBoneTransform = null;
+            else
+                Map[i].ActorBoneTransform = bone.Transform;
         }
     }
 
     public void UpdateBoneMapping()
     {
         if (Data == null)
-            BoneMapping = new int[0];
+            Map = new BoneMap[0];
         else
         {
-            if (BoneMapping == null || BoneMapping.Length != GetActor().Bones.Length)
+            if (Map == null)
             {
-                LoadBoneMapping();
+                AutoMap();
             }
         }
     }
@@ -74,7 +85,7 @@ public class MotionEditor : MonoBehaviour
 
         if(Data != null)
         {
-            LoadBoneMapping();
+            AutoMap();
             LoadFrame(0.0f);
         }
     }
@@ -83,7 +94,7 @@ public class MotionEditor : MonoBehaviour
     {
         if (Data != null && Data.GetName() == name)
             return;
-        MotionData data = System.Array.Find(Files, x => x.GetName() == name);
+        MotionData data = Array.Find(Files, x => x.GetName() == name);
         if (data == null)
         {
             Debug.Log("Data " + name + " could not be found.");
@@ -96,36 +107,35 @@ public class MotionEditor : MonoBehaviour
     {
         if (Data == null)
             return;
-        LoadData(Files[Mathf.Max(System.Array.FindIndex(Files, x => x == Data) - 1, 0)]);
+        LoadData(Files[Mathf.Max(Array.FindIndex(Files, x => x == Data) - 1, 0)]);
     }
 
     public void LoadNextData()
     {
         if (Data == null)
             return;
-        LoadData(Files[Mathf.Min(System.Array.FindIndex(Files, x => x == Data) + 1, Files.Length - 1)]);
+        LoadData(Files[Mathf.Min(Array.FindIndex(Files, x => x == Data) + 1, Files.Length - 1)]);
     }
 
     public void LoadFrame(float timestamp)
     {
         Timestamp = timestamp;
-        Actor avatar = GetActor();
+        Actor actor = GetActor();
         Frame frame = GetCurrentFrame();
         Matrix4x4 root = frame.GetBoneTransformation(0, true);
-        avatar.transform.position = root.GetPosition();
-        avatar.transform.rotation = root.GetRotation();
+        actor.transform.position = root.GetPosition();
+        actor.transform.rotation = root.GetRotation();
         UpdateBoneMapping();
 
-        for (int i = 0; i < avatar.Bones.Length; i++)
+        for (int i = 0; i < actor.Bones.Length; i++)
         {
-            //if (BoneMapping[i] == -1)
-            //    Debug.Log("Bone " + avatar.Bones[i].GetName() + " could not be mapped.");
-            //else
-            //{
-            Matrix4x4 transformation = frame.GetBoneTransformation(BoneMapping[i], true);
-            avatar.Bones[i].Transform.position = transformation.GetPosition();
-            avatar.Bones[i].Transform.rotation = transformation.GetRotation();
-            //}
+            BoneMap map = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
+            if (map.BvhBoneName != null)
+            {
+                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, true);
+                actor.Bones[i].Transform.position = transformation.GetPosition();
+                actor.Bones[i].Transform.rotation = transformation.GetRotation();
+            }
         }
     }
 
@@ -188,6 +198,8 @@ public class MotionEditor : MonoBehaviour
         public string[] EnumNames = new string[0];
         public bool IsOK = false;
 
+        private bool Visiable = false;
+
         private void Awake()
         {
             Target = (MotionEditor)target;
@@ -218,6 +230,11 @@ public class MotionEditor : MonoBehaviour
             if(GUILayout.Button("Load"))
             {
                 Target.Load();
+                if(Target.Files.Length == 0)
+                {
+                    Debug.Log("Motion data could not be found!");
+                    return;
+                }
                 if(Target.Data == null)
                     Target.LoadData(Target.Files[0]);
             }
@@ -227,6 +244,7 @@ public class MotionEditor : MonoBehaviour
             {
                 {
                     EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Data", GUILayout.Width(50.0f));
                     int selectIndex = EditorGUILayout.Popup(System.Array.FindIndex(Names, x => x == Target.Data.GetName()), EnumNames);
                     if (selectIndex != -1)
                     {
@@ -248,6 +266,32 @@ public class MotionEditor : MonoBehaviour
                     EditorGUILayout.LabelField("Data", GUILayout.Width(50.0f));
                     EditorGUILayout.ObjectField(Target.Data, typeof(MotionData), true);
                     EditorGUILayout.EndHorizontal();
+                }
+
+                using (new EditorGUILayout.VerticalScope("Box"))
+                {
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        Visiable = EditorGUILayout.Toggle(Visiable, GUILayout.Width(20.0f));
+                        EditorGUILayout.LabelField("Show Bone Map", GUILayout.Width(300.0f));
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    if (Visiable)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField("BVH Bone Name", GUILayout.Width(200.0f));
+                        EditorGUILayout.LabelField("Actor Bone Name");
+                        EditorGUILayout.EndHorizontal();
+
+                        for (int i = 0; i < Target.Data.Root.Bones.Length; i++)
+                        {
+                            EditorGUILayout.BeginHorizontal();
+                            EditorGUILayout.LabelField(Target.Map[i].BvhBoneName, GUILayout.Width(200.0f));
+                            EditorGUILayout.ObjectField(Target.Map[i].ActorBoneTransform, typeof(Transform), true);
+                            EditorGUILayout.EndHorizontal();
+                        }
+                    }
                 }
 
                 {

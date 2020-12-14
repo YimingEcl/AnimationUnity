@@ -45,21 +45,24 @@ public class Actor : MonoBehaviour
 		{
 			Action<Bone> recursion = null;
 			recursion = new Action<Bone>((bone) => {
-				if (bone.GetParent() != null)
-				{
-					UltiDraw.DrawBone(
-						bone.GetParent().Transform.position,
-						Quaternion.FromToRotation(bone.GetParent().Transform.forward, bone.Transform.position - bone.GetParent().Transform.position) * bone.GetParent().Transform.rotation,
-						12.5f * BoneSize * bone.GetLength(), bone.GetLength(),
-						boneColor.Transparent(alpha)
+				if(bone.Visiable)
+                {
+					if (bone.GetParent() != null)
+					{
+						UltiDraw.DrawBone(
+							bone.GetParent().Transform.position,
+							Quaternion.FromToRotation(bone.GetParent().Transform.forward, bone.Transform.position - bone.GetParent().Transform.position) * bone.GetParent().Transform.rotation,
+							12.5f * BoneSize * bone.GetLength(), bone.GetLength(),
+							boneColor.Transparent(alpha)
+						);
+					}
+					UltiDraw.DrawSphere(
+						bone.Transform.position,
+						Quaternion.identity,
+						5f / 8f * BoneSize,
+						jointColor.Transparent(alpha)
 					);
 				}
-				UltiDraw.DrawSphere(
-					bone.Transform.position,
-					Quaternion.identity,
-					5f / 8f * BoneSize,
-					jointColor.Transparent(alpha)
-				);
 				for (int i = 0; i < bone.Childs.Length; i++)
 				{
 					recursion(bone.GetChild(i));
@@ -108,6 +111,7 @@ public class Actor : MonoBehaviour
 			if (parent != null)
 			{
 				bone.Parent = parent.Index;
+				bone.Level = parent.Level + 1;
 				ArrayExtensions.Add(ref parent.Childs, bone.Index);
 			}
 			parent = bone;
@@ -131,6 +135,7 @@ public class Actor : MonoBehaviour
 				if (parent != null)
 				{
 					bone.Parent = parent.Index;
+					bone.Level = parent.Level + 1;
 					ArrayExtensions.Add(ref parent.Childs, bone.Index);
 				}
 				parent = bone;
@@ -143,35 +148,54 @@ public class Actor : MonoBehaviour
 		recursion(GetRoot(), null);
 	}
 
+	public Bone FindBone(string name)
+	{
+		return Array.Find(Bones, x => x.Name == name);
+	}
+
+	public Bone FindBoneContains(string name)
+	{
+		return System.Array.Find(Bones, x => x.Name.Contains(name));
+	}
+
 	[Serializable]
 	public class Bone
 	{
 		public Actor Actor;
 		public Transform Transform;
-		public Vector3 Velocity;
-		public Vector3 Acceleration;
-		public Vector3 Force;
+		public string Name;
 		public int Index;
 		public int Parent;
 		public int[] Childs;
+		public int Level;
 		public float Length;
+		public bool Visiable;
 
-		public Bone(Actor avatar, Transform transform, int index)
+
+		public Bone(Actor actor, Transform transform, int index)
 		{
-			Actor = avatar;
+			Actor = actor;
 			Transform = transform;
-			Velocity = Vector3.zero;
-			Acceleration = Vector3.zero;
+			Name = transform.name;
 			Index = index;
 			Parent = -1;
 			Childs = new int[0];
+			Level = 0;
 			Length = GetLength();
+			Visiable = true;
 		}
 
 		public string GetName()
 		{
-			return Transform.name;
+			return Name;
 		}
+
+		public string GetFixedName()
+        {
+			char[] space = new char[] { ' ', ':', '_' };
+			string[] fixedName = Name.Split(space);
+			return fixedName[fixedName.Length - 1];
+        }
 
 		public Bone GetParent()
 		{
@@ -211,6 +235,8 @@ public class Actor : MonoBehaviour
 	public class ActorEditor : Editor
 	{
 		public Actor Target;
+		private bool Visiable = false;
+		private bool BoneVisiable = false;
 
 		private void Awake()
 		{
@@ -220,6 +246,52 @@ public class Actor : MonoBehaviour
 		public override void OnInspectorGUI()
 		{
 			Target.DrawSkeleton = EditorGUILayout.Toggle("Draw Skeleton", Target.DrawSkeleton);
+			using (new EditorGUILayout.VerticalScope("Box"))
+			{
+				EditorGUILayout.BeginHorizontal();
+				Visiable = EditorGUILayout.Toggle(Visiable, GUILayout.Width(20.0f));
+				EditorGUILayout.LabelField("Show All Bone", GUILayout.Width(300.0f));
+				EditorGUILayout.EndHorizontal();
+
+				if(Visiable)
+                {
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Enable All"))
+					{
+						for (int i = 0; i < Target.Bones.Length; i++)
+							Target.Bones[i].Visiable = true;
+					}
+					if (GUILayout.Button("Disable All"))
+					{
+						for (int i = 0; i < Target.Bones.Length; i++)
+							Target.Bones[i].Visiable = false;
+					}
+					EditorGUILayout.EndHorizontal();
+
+					for(int i = 0; i < Target.Bones.Length; i++)
+                    {
+						EditorGUILayout.BeginHorizontal();
+						BoneVisiable = EditorGUILayout.Toggle(Target.Bones[i].Visiable, GUILayout.Width(20.0f));
+
+						if(Target.Bones[i].Visiable != BoneVisiable)
+							ToggleBoneVisiable(Target.Bones[i]);
+
+						for (int j = 0; j < Target.Bones[i].Level; j++)
+							EditorGUILayout.LabelField("--", GUILayout.Width(15.0f));
+						EditorGUILayout.LabelField(Target.Bones[i].Name);
+						EditorGUILayout.EndHorizontal();
+					}
+				}
+			}
+		}
+
+		public void ToggleBoneVisiable(Bone bone)
+        {
+			bone.Visiable = BoneVisiable;
+			for (int i = 0; i < bone.Childs.Length; i++)
+			{
+				ToggleBoneVisiable(bone.GetChild(i));
+			}
 		}
 	}
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using UnityEngine.Rendering.HighDefinition;
 
 public class MotionExporter : MonoBehaviour
 {
