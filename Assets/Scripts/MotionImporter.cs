@@ -5,7 +5,10 @@ using UnityEditor;
 
 public class MotionImporter : MonoBehaviour
 {
-    public string FileName;
+    public string Folder = string.Empty;
+    public string Destination = string.Empty;
+    public string[] Files = new string[0];
+    public bool[] IsImport = new bool[0];
     private char[] space = new char[] { ' ', '\t', '\n', '\r' };
 
     private MotionData Data;
@@ -15,18 +18,33 @@ public class MotionImporter : MonoBehaviour
         Data = ScriptableObject.CreateInstance<MotionData>();
     }
 
-    public void ImportBVH()
+
+    public void Import()
     {
-        string[] lines = File.ReadAllLines("Assets\\" + FileName);
+        for(int i = 0; i < Files.Length; i++)
+        {
+            if(IsImport[i])
+            {
+                ImportFile(Files[i]);
+            }
+        }
+    }
+
+    public void ImportFile(string FileName)
+    {
+        string[] lines = File.ReadAllLines(Folder + "\\" + FileName);
         int index = 0;
         string name = string.Empty;
         string parent = string.Empty;
 
-        //MotionData Data = ScriptableObject.CreateInstance<MotionData>();
         Data = ScriptableObject.CreateInstance<MotionData>();
         Data.name = FileName;
-        Data.name = FileName;
-        AssetDatabase.CreateAsset(Data, "Assets\\" + Data.name + ".asset");
+        if(!AssetDatabase.IsValidFolder(Destination))
+        {
+            AssetDatabase.CreateFolder("Assets", Destination.Substring(Mathf.Min(7, Destination.Length)));
+            Debug.Log("No Directory Found, New Created!");
+        }
+        AssetDatabase.CreateAsset(Data, Destination + "\\" + FixedFileName(Data.name) + ".asset");
 
         List<Vector3> offsets = new List<Vector3>();
         Vector3 offset = Vector3.zero;
@@ -48,19 +66,19 @@ public class MotionImporter : MonoBehaviour
                 if (entries[entry].Contains("ROOT"))
                 {
                     parent = "None";
-                    name = FixedName(entries[entry + 1]);
+                    name = FixedBoneName(entries[entry + 1]);
                     break;
                 }
                 else if (entries[entry].Contains("JOINT"))
                 {
                     parent = name;
-                    name = FixedName(entries[entry + 1]);
+                    name = FixedBoneName(entries[entry + 1]);
                     break;
                 }
                 else if (entries[entry].Contains("End"))
                 {
                     parent = name;
-                    name = FixedName(parent + entries[entry + 1]);
+                    name = FixedBoneName(parent + entries[entry + 1]);
 
                     string[] offsetEntries = lines[index + 2].Split(space);
                     for (int offsetEntry = 0; offsetEntry < offsetEntries.Length; offsetEntry++)
@@ -203,16 +221,39 @@ public class MotionImporter : MonoBehaviour
         AssetDatabase.Refresh();
     }
 
-    public void ImportFBX()
+    public void Load()
     {
-
+        if (Directory.Exists(Folder))
+        { 
+            DirectoryInfo info = new DirectoryInfo(Folder);
+            FileInfo[] items = info.GetFiles("*.bvh");
+            Files = new string[items.Length];
+            IsImport = new bool[items.Length];
+            for (int i = 0; i < items.Length; i++)
+            {
+                Files[i] = items[i].Name;
+                IsImport[i] = true;
+            }
+        }
+        else
+        {
+            Files = new string[0];
+            IsImport = new bool[0];
+        }     
     }
 
-    public string FixedName(string str)
+    public string FixedBoneName(string str)
     {
-        char[] option = { '_', ':' };
+        char[] option = { '_', ':', '.' };
         string[] name = str.Split(option);
         return name[name.Length - 1];
+    }
+
+    public string FixedFileName(string str)
+    {
+        char[] option = { '_', ':', '.' };
+        string[] name = str.Split(option);
+        return name[0];
     }
 
     public float[] ParseFloatArray(string str)
@@ -240,6 +281,8 @@ public class MotionImporter : MonoBehaviour
     {
         public MotionImporter Target;
 
+        private bool IsExist = false;
+
         private void Awake()
         {
             Target = (MotionImporter)target;
@@ -247,11 +290,50 @@ public class MotionImporter : MonoBehaviour
 
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspector();
+            EditorGUILayout.BeginHorizontal();
+            Target.Folder = EditorGUILayout.TextField("Folder", "Assets/" + Target.Folder.Substring(Mathf.Min(7, Target.Folder.Length)));
+            if (GUILayout.Button("Load"))
+            {
+                Target.Load();
+                if (Target.Files.Length == 0)
+                {
+                    Debug.Log("No Motion Data File!");
+                    return;
+                }
+                else
+                    IsExist = true;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if(IsExist)
+            {
+                Target.Destination = EditorGUILayout.TextField("Destination", "Assets/" + Target.Destination.Substring(Mathf.Min(7, Target.Destination.Length)));
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Enable All"))
+                {
+                    for (int i = 0; i < Target.Files.Length; i++)
+                        Target.IsImport[i] = true;
+                }
+                if (GUILayout.Button("Disable All"))
+                {
+                    for (int i = 0; i < Target.Files.Length; i++)
+                        Target.IsImport[i] = false;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                for (int i = 0; i < Target.Files.Length; i++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    Target.IsImport[i] = EditorGUILayout.Toggle(Target.IsImport[i], GUILayout.Width(20.0f));
+                    EditorGUILayout.LabelField(Target.Files[i]);
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
 
             if (GUILayout.Button("Import"))
             {
-                Target.ImportBVH();
+                Target.Import();
             }
         }
     }
