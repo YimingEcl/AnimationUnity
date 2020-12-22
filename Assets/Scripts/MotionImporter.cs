@@ -7,10 +7,11 @@ public class MotionImporter : MonoBehaviour
 {
     public string Folder = string.Empty;
     public string Destination = string.Empty;
-    public string[] Files = new string[0];
-    public bool[] IsImport = new bool[0];
-    private char[] space = new char[] { ' ', '\t', '\n', '\r' };
+    public string[] Files = null;
+    public bool[] Imports = null;
 
+    private char[] TextSpace = new char[] { ' ', '\t', '\n', '\r' };
+    private char[] NameSpace = new char[] { '_', ':', '.' };
     private MotionData Data;
 
     private void Awake()
@@ -23,10 +24,8 @@ public class MotionImporter : MonoBehaviour
     {
         for(int i = 0; i < Files.Length; i++)
         {
-            if(IsImport[i])
-            {
+            if(Imports[i])
                 ImportFile(Files[i]);
-            }
         }
     }
 
@@ -39,7 +38,7 @@ public class MotionImporter : MonoBehaviour
 
         Data = ScriptableObject.CreateInstance<MotionData>();
         Data.name = FileName;
-        if(!AssetDatabase.IsValidFolder(Destination))
+        if(!AssetDatabase.IsValidFolder(Destination) && Destination != "Assets/")
         {
             AssetDatabase.CreateFolder("Assets", Destination.Substring(Mathf.Min(7, Destination.Length)));
             Debug.Log("No Directory Found, New Created!");
@@ -59,7 +58,7 @@ public class MotionImporter : MonoBehaviour
                 break;
             }
 
-            string[] entries = lines[index].Split(space);
+            string[] entries = lines[index].Split(TextSpace);
 
             for (int entry = 0; entry < entries.Length; entry++)
             {
@@ -80,12 +79,12 @@ public class MotionImporter : MonoBehaviour
                     parent = name;
                     name = FixedBoneName(parent + entries[entry + 1]);
 
-                    string[] offsetEntries = lines[index + 2].Split(space);
+                    string[] offsetEntries = lines[index + 2].Split(TextSpace);
                     for (int offsetEntry = 0; offsetEntry < offsetEntries.Length; offsetEntry++)
                     {
                         if (offsetEntries[offsetEntry].Contains("OFFSET"))
                         {
-                            offset.x = float.Parse(offsetEntries[offsetEntry + 1]); 
+                            offset.x = float.Parse(offsetEntries[offsetEntry + 1]);
                             offset.y = float.Parse(offsetEntries[offsetEntry + 2]);
                             offset.z = float.Parse(offsetEntries[offsetEntry + 3]);
                             break;
@@ -219,6 +218,7 @@ public class MotionImporter : MonoBehaviour
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+        Debug.Log("Import File: " + FileName + " Successfully!");
     }
 
     public void Load()
@@ -228,31 +228,30 @@ public class MotionImporter : MonoBehaviour
             DirectoryInfo info = new DirectoryInfo(Folder);
             FileInfo[] items = info.GetFiles("*.bvh");
             Files = new string[items.Length];
-            IsImport = new bool[items.Length];
+            Imports = new bool[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 Files[i] = items[i].Name;
-                IsImport[i] = true;
+                Imports[i] = true;
             }
         }
         else
         {
             Files = new string[0];
-            IsImport = new bool[0];
+            Imports = new bool[0];
+            Debug.Log("Folder Not Found!");
         }     
     }
 
     public string FixedBoneName(string str)
     {
-        char[] option = { '_', ':', '.' };
-        string[] name = str.Split(option);
+        string[] name = str.Split(NameSpace);
         return name[name.Length - 1];
     }
 
     public string FixedFileName(string str)
     {
-        char[] option = { '_', ':', '.' };
-        string[] name = str.Split(option);
+        string[] name = str.Split(NameSpace);
         return name[0];
     }
 
@@ -267,7 +266,7 @@ public class MotionImporter : MonoBehaviour
             str = str.Substring(0, str.Length - 1);
         }
 
-        string[] multiStr = str.Split(space);
+        string[] multiStr = str.Split(TextSpace);
         float[] result = new float[multiStr.Length];
         for (int i = 0; i < multiStr.Length; i++)
         {
@@ -291,13 +290,13 @@ public class MotionImporter : MonoBehaviour
         public override void OnInspectorGUI()
         {
             EditorGUILayout.BeginHorizontal();
-            Target.Folder = EditorGUILayout.TextField("Folder", "Assets/" + Target.Folder.Substring(Mathf.Min(7, Target.Folder.Length)));
+            Target.Folder = EditorGUILayout.TextField("Data Folder", "Assets/" + Target.Folder.Substring(Mathf.Min(7, Target.Folder.Length)));
             if (GUILayout.Button("Load"))
             {
                 Target.Load();
                 if (Target.Files.Length == 0)
                 {
-                    Debug.Log("No Motion Data File!");
+                    Debug.Log("No BVH Motion Data File!");
                     return;
                 }
                 else
@@ -307,33 +306,31 @@ public class MotionImporter : MonoBehaviour
 
             if(IsExist)
             {
-                Target.Destination = EditorGUILayout.TextField("Destination", "Assets/" + Target.Destination.Substring(Mathf.Min(7, Target.Destination.Length)));
+                Target.Destination = EditorGUILayout.TextField("Import Folder", "Assets/" + Target.Destination.Substring(Mathf.Min(7, Target.Destination.Length)));
 
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Enable All"))
                 {
                     for (int i = 0; i < Target.Files.Length; i++)
-                        Target.IsImport[i] = true;
+                        Target.Imports[i] = true;
                 }
                 if (GUILayout.Button("Disable All"))
                 {
                     for (int i = 0; i < Target.Files.Length; i++)
-                        Target.IsImport[i] = false;
+                        Target.Imports[i] = false;
                 }
                 EditorGUILayout.EndHorizontal();
 
                 for (int i = 0; i < Target.Files.Length; i++)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    Target.IsImport[i] = EditorGUILayout.Toggle(Target.IsImport[i], GUILayout.Width(20.0f));
+                    Target.Imports[i] = EditorGUILayout.Toggle(Target.Imports[i], GUILayout.Width(20.0f));
                     EditorGUILayout.LabelField(Target.Files[i]);
                     EditorGUILayout.EndHorizontal();
                 }
-            }
 
-            if (GUILayout.Button("Import"))
-            {
-                Target.Import();
+                if (GUILayout.Button("Import"))
+                    Target.Import();
             }
         }
     }

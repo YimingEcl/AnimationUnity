@@ -9,7 +9,6 @@ public class MotionData : ScriptableObject
     public Hierarchy Root = null;
     public Frame[] Frames = new Frame[0];
     public Module[] Modules = new Module[0];
-
     public float Framerate = 1.0f;
     public Vector3 Offset = Vector3.zero;
     public float Scale = 1.0f;
@@ -158,6 +157,4 @@ public class MotionData : ScriptableObject
             }
         }
     }
-
-
 }

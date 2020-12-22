@@ -5,7 +5,7 @@ using UnityEditor;
 
 public abstract class Module : ScriptableObject
 {
-    public enum ID { Phase, Emotion, Velocity, Root, Length };
+    public enum ID { Phase, Emotion, Trajectory, Velocity, Root, Length };
 
     public MotionData Data;
     private bool Visiable = false;
@@ -32,7 +32,7 @@ public abstract class Module : ScriptableObject
 			Visiable = EditorGUILayout.Toggle(Visiable, GUILayout.Width(20.0f));
 			EditorGUILayout.LabelField(GetID().ToString() + " Module");
 			if (GUILayout.Button("Remove"))
-				Data.RemoveModule(GetID());
+				Data.RemoveModule(GetID());	
 			EditorGUILayout.EndHorizontal();
 
 			if (Visiable)

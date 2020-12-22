@@ -7,8 +7,7 @@ using System;
 public class Actor : MonoBehaviour
 {
 	public Bone[] Bones = new Bone[0];
-
-	private bool DrawSkeleton = true;
+	public bool DrawSkeleton = true;
 
 	private float BoneSize = 0.035f;
 	private Color BoneColor = Color.cyan;

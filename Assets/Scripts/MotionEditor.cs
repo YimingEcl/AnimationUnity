@@ -44,9 +44,7 @@ public class MotionEditor : MonoBehaviour
         else
         {
             if (Map == null)
-            {
                 AutoMap();
-            }
         }
     }
 
@@ -152,9 +150,7 @@ public class MotionEditor : MonoBehaviour
     public void PlayAnimation()
     {
         if (Playing)
-        {
             return;
-        }
         Playing = true;
         EditorCoroutines.StartCoroutine(Play(), this);
     }
@@ -162,9 +158,7 @@ public class MotionEditor : MonoBehaviour
     public void StopAnimation()
     {
         if (!Playing)
-        {
             return;
-        }
         Playing = false;
         EditorCoroutines.StopCoroutine(Play(), this);
     }
@@ -193,10 +187,8 @@ public class MotionEditor : MonoBehaviour
     public class MotionEditor_Editor : Editor
     {
         public MotionEditor Target;
-
         public string[] Names = new string[0];
         public string[] EnumNames = new string[0];
-        public bool IsOK = false;
 
         private bool Visiable = false;
 
@@ -204,6 +196,13 @@ public class MotionEditor : MonoBehaviour
         {
             Target = (MotionEditor)target;
             InitNames();
+            EditorApplication.update += EditorUpdate;
+        }
+
+        private void OnDestroy()
+        {
+            EditorApplication.update -= EditorUpdate;
+            AssetDatabase.SaveAssets();
         }
 
         public void InitNames()
@@ -219,6 +218,11 @@ public class MotionEditor : MonoBehaviour
 
             Names = names.ToArray();
             EnumNames = enumNames.ToArray();
+        }
+
+        public void EditorUpdate()
+        {
+            Repaint();
         }
 
         public override void OnInspectorGUI()
@@ -237,6 +241,7 @@ public class MotionEditor : MonoBehaviour
                 }
                 if(Target.Data == null)
                     Target.LoadData(Target.Files[0]);
+                InitNames();
             }
             EditorGUILayout.EndHorizontal();
 
@@ -274,6 +279,8 @@ public class MotionEditor : MonoBehaviour
                         EditorGUILayout.BeginHorizontal();
                         Visiable = EditorGUILayout.Toggle(Visiable, GUILayout.Width(20.0f));
                         EditorGUILayout.LabelField("Show Bone Map", GUILayout.Width(300.0f));
+                        if (GUILayout.Button("Auto"))
+                            Target.AutoMap();
                         EditorGUILayout.EndHorizontal();
                     }
 
