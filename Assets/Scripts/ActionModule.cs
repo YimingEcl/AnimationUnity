@@ -2,60 +2,61 @@
 using UnityEngine;
 using UnityEditor;
 
-public class EmotionModule : Module
+public class ActionModule : Module
 {
     public bool[] Keys;
-    public Emotion[] Emotions;
+    public Action[] Actions;
 
     public override ID GetID()
     {
-        return ID.Emotion;
+        return ID.Action;
     }
 
     public override Module Init(MotionData data)
     {
         Data = data;
-        Emotions = new Emotion[0];
+        Actions = new Action[0];
         Keys = new bool[data.GetTotalFrames()];
         Keys[0] = true;
         Keys[Keys.Length - 1] = true;
-        DefaultEmotion();
+        DefaultAction();
         return this;
     }
 
-    public void DefaultEmotion()
+    public void DefaultAction()
     {
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, "Happy"));
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, "Sad"));
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, "Scared"));
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, "Shocked"));
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, "Angry"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "Neutral"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "Cross Hands"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "Cross Arms"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "LH on Hip"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "RH on Hip"));
+        ArrayExtensions.Add(ref Actions, new Action(this, "Thank"));
     }
 
-    public void AddEmotion(string name)
+    public void AddAction(string name)
     {
-        if (Array.Exists(Emotions, x => x.Name == name))
+        if (Array.Exists(Actions, x => x.Name == name))
         {
-            Debug.Log("Style with name " + name + " already exists.");
+            Debug.Log("Action with name " + name + " already exists.");
             return;
         }
-        ArrayExtensions.Add(ref Emotions, new Emotion(this, name));
+        ArrayExtensions.Add(ref Actions, new Action(this, name));
     }
 
-    public void RemoveEmotion(string name)
+    public void RemoveAction(string name)
     {
-        int index = Array.FindIndex(Emotions, x => x.Name == name);
+        int index = Array.FindIndex(Actions, x => x.Name == name);
         if (index >= 0)
-            ArrayExtensions.RemoveAt(ref Emotions, index);
+            ArrayExtensions.RemoveAt(ref Actions, index);
         else
-            Debug.Log("Style with name " + name + " does not exist.");
+            Debug.Log("Action with name " + name + " does not exist.");
     }
 
     public void ToggleKey(Frame frame)
     {
         Keys[frame.Index - 1] = !Keys[frame.Index - 1];
-        for (int i = 0; i < Emotions.Length; i++)
-            Emotions[i].Compute(frame);
+        for (int i = 0; i < Actions.Length; i++)
+            Actions[i].Compute(frame);
     }
 
     public bool IsKey(Frame frame)
@@ -88,7 +89,7 @@ public class EmotionModule : Module
     public override void DerivedInspector(MotionEditor editor)
     {
         Frame frame = editor.GetCurrentFrame();
-        Color[] colors = UltiDraw.GetRainbowColors(Emotions.Length);
+        Color[] colors = UltiDraw.GetRainbowColors(Actions.Length);
 
         {
             EditorGUILayout.BeginHorizontal();
@@ -96,26 +97,26 @@ public class EmotionModule : Module
             if (GUILayout.Button("Key"))
                 ToggleKey(frame);
             GUI.color = Color.white;
-            if (GUILayout.Button("Add Emotion"))
+            if (GUILayout.Button("Add Action"))
             {
-                AddEmotion("New Emotion " + (Emotions.Length + 1));
+                AddAction("New Action " + (Actions.Length + 1));
                 EditorGUIUtility.ExitGUI();
             }
             EditorGUILayout.EndHorizontal();
         }
 
         EditorGUI.BeginDisabledGroup(!IsKey(frame));
-        for (int i = 0; i < Emotions.Length; i++)
+        for (int i = 0; i < Actions.Length; i++)
         {
             EditorGUILayout.BeginHorizontal();
             GUI.color = colors[i];
-            if (GUILayout.Button(Emotions[i].Name, GUILayout.Width(150.0f)))
-                Emotions[i].Toggle(frame);
+            if (GUILayout.Button(Actions[i].Name, GUILayout.Width(150.0f)))
+                Actions[i].Toggle(frame);
             GUI.color = Color.white;
-            EditorGUILayout.FloatField(Emotions[i].GetValue(frame), GUILayout.Width(50.0f));
-            Emotions[i].Name = EditorGUILayout.TextField(Emotions[i].Name);
+            EditorGUILayout.FloatField(Actions[i].GetValue(frame), GUILayout.Width(50.0f));
+            Actions[i].Name = EditorGUILayout.TextField(Actions[i].Name);
             if (GUILayout.Button("Remove"))
-                RemoveEmotion(Emotions[i].Name);
+                RemoveAction(Actions[i].Name);
             EditorGUILayout.EndHorizontal();
         }
         EditorGUI.EndDisabledGroup();
@@ -127,7 +128,7 @@ public class EmotionModule : Module
             EditorGUILayout.BeginVertical(GUILayout.Height(50f));
             Rect ctrl = EditorGUILayout.GetControlRect();
             Rect rect = new Rect(ctrl.x, ctrl.y, ctrl.width, 50f);
-            EditorGUI.DrawRect(rect, UltiDraw.Black);
+            EditorGUI.DrawRect(rect, Color.black);
             {
                 UltiDraw.Begin();
 
@@ -154,7 +155,7 @@ public class EmotionModule : Module
                 Vector3 bottom = new Vector3(0f, rect.yMax, 0f);
                 Vector3 top = new Vector3(0f, rect.yMax - rect.height, 0f);
 
-                for (int i = 0; i < Emotions.Length; i++)
+                for (int i = 0; i < Actions.Length; i++)
                 {
                     Frame current = Data.Frames.First();
                     while (current != Data.Frames.Last())
@@ -164,8 +165,8 @@ public class EmotionModule : Module
                         float _end = (float)(Mathf.Clamp(next.Index, start, end) - start) / (float)elements;
                         float xStart = rect.x + _start * rect.width;
                         float xEnd = rect.x + _end * rect.width;
-                        float yStart = rect.y + (1f - Emotions[i].Values[Mathf.Clamp(current.Index, start, end) - 1]) * rect.height;
-                        float yEnd = rect.y + (1f - Emotions[i].Values[Mathf.Clamp(next.Index, start, end) - 1]) * rect.height;
+                        float yStart = rect.y + (1f - Actions[i].Values[Mathf.Clamp(current.Index, start, end) - 1]) * rect.height;
+                        float yEnd = rect.y + (1f - Actions[i].Values[Mathf.Clamp(next.Index, start, end) - 1]) * rect.height;
                         UltiDraw.DrawLine(new Vector3(xStart, yStart, 0f), new Vector3(xEnd, yEnd, 0f), colors[i]);
                         current = next;
                     }
@@ -205,13 +206,13 @@ public class EmotionModule : Module
     }
 
     [Serializable]
-    public class Emotion
+    public class Action
     {
-        public EmotionModule Module;
+        public ActionModule Module;
         public string Name;
         public float[] Values;
 
-        public Emotion(EmotionModule module, string name)
+        public Action(ActionModule module, string name)
         {
             Module = module;
             Name = name;

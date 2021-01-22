@@ -90,7 +90,7 @@ public class MotionCutter : MonoBehaviour
                 outputFile.WriteLine(line);
         }
 
-        Debug.Log("Cut Successfully!");
+        Debug.Log("Cut File: " + name + " Successfully!");
     }
 
     public string FixedFileName(string str)

@@ -213,6 +213,8 @@ public class MotionImporter : MonoBehaviour
                 position = (position == Vector3.zero ? offsets[j] : position) / 100.0f;
                 Matrix4x4 local = Matrix4x4.TRS(position, rotation, Vector3.one);
                 Data.Frames[i].World[j] = bone.Parent == "None" ? local : Data.Frames[i].World[Data.Root.FindBone(bone.Parent).Index] * local;
+
+                EditorUtility.SetDirty(Data);
             }
         }
 

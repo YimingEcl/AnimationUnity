@@ -13,7 +13,8 @@ public class VelocityModule : Module
     public float[] AngularVelocities;
     public bool[] PartSelected;
     public int[] JointCount;
-    public string[] PartName;
+    public string[] Local;
+    public float Delta;
     private bool ShowAcceleration;  
 
     public override ID GetID()
@@ -31,7 +32,8 @@ public class VelocityModule : Module
         AngularVelocities = new float[data.Root.Bones.Length];
         ShowAcceleration = false;
         JointCount = new int[6] { 4, 7, 12, 17, 22, 27 };
-        PartName = new string[6] { "Body", "Head", "Left Hand", "Right Hand", "Left Leg", "Right Leg" };
+        Local = new string[6] { "Body", "Head", "Left Hand", "Right Hand", "Left Leg", "Right Leg" };
+        Delta = 1.0f;
         PartSelected = new bool[JointCount.Length];
         return this;
     }
@@ -41,26 +43,28 @@ public class VelocityModule : Module
         Transformations = frame.GetBoneTransformations(true);
     }
 
-    public void GetVelocities(Frame frame)
+    public void GetVelocities(Frame frame, float delta)
     {
-        Velocities = frame.GetBoneVelocities(true, 1.0f);
+        Velocities = frame.GetBoneVelocities(true, delta);
     }
 
-    public void GetAccelerations(Frame frame)
+    public void GetAccelerations(Frame frame, float delta)
     {
-        Accelerations = frame.GetBoneAccelerations(true, 1.0f);
+        Accelerations = frame.GetBoneAccelerations(true, delta);
     }
 
-    public void GetAngularVelocities(Frame frame)
+    public void GetAngularVelocities(Frame frame, float delta)
     {
-        AngularVelocities = frame.GetAngularBoneVelocities(true, 1.0f);
+        AngularVelocities = frame.GetAngularBoneVelocities(true, delta);
     }
 
     public override void DerivedInspector(MotionEditor editor)
     {
         Frame frame = editor.GetCurrentFrame();
-        GetVelocities(frame);
-        GetAccelerations(frame);
+        GetVelocities(frame, Delta);
+        GetAccelerations(frame, Delta);
+
+        Delta = EditorGUILayout.FloatField("Delta Time", Delta);
 
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Enable All"))
@@ -107,7 +111,7 @@ public class VelocityModule : Module
                         Selected[j] = partSelect;
                 }
             }
-            EditorGUILayout.LabelField(PartName[i] + " Part", GUILayout.Width(200.0f));
+            EditorGUILayout.LabelField(Local[i] + " Part", GUILayout.Width(200.0f));
             EditorGUILayout.EndHorizontal();
 
             for (; index < JointCount[i]; index++)

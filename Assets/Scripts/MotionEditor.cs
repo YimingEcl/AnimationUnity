@@ -11,6 +11,7 @@ public class MotionEditor : MonoBehaviour
     public string Folder = string.Empty;
     public int Index = 0;
     public bool Playing = false;
+    public bool Mirrored = true;
 
     private float Timestamp = 0.0f;
     private BoneMap[] Map = null;
@@ -41,11 +42,8 @@ public class MotionEditor : MonoBehaviour
     {
         if (Data == null)
             Map = new BoneMap[0];
-        else
-        {
-            if (Map == null)
-                AutoMap();
-        }
+        else if (Map == null)
+            AutoMap();
     }
 
     public MotionData GetData()
@@ -120,7 +118,7 @@ public class MotionEditor : MonoBehaviour
         Timestamp = timestamp;
         Actor actor = GetActor();
         Frame frame = GetCurrentFrame();
-        Matrix4x4 root = frame.GetBoneTransformation(0, true);
+        Matrix4x4 root = frame.GetBoneTransformation(0, Mirrored);
         actor.transform.position = root.GetPosition();
         actor.transform.rotation = root.GetRotation();
         UpdateBoneMapping();
@@ -130,9 +128,10 @@ public class MotionEditor : MonoBehaviour
             BoneMap map = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
             if (map.BvhBoneName != null)
             {
-                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, true);
+                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, Mirrored);
                 actor.Bones[i].Transform.position = transformation.GetPosition();
                 actor.Bones[i].Transform.rotation = transformation.GetRotation();
+                actor.Bones[i].Velocity = frame.GetBoneVelocity(map.BvhBoneName, Mirrored, 1.0f / 30);
             }
         }
     }
@@ -263,6 +262,10 @@ public class MotionEditor : MonoBehaviour
                     if (Event.current.type == EventType.Used)
                         Target.LoadData(Target.Files[sliderIndex - 1]);
                     EditorGUILayout.LabelField("/ " + Target.Files.Length, GUILayout.Width(60.0f));
+                    //GUI.color = Target.Mirrored ? Color.red : Color.white;
+                    //if(GUILayout.Button("Mirror"))
+                    //    Target.Mirrored = !Target.Mirrored;
+                    //GUI.color = Color.white;
                     EditorGUILayout.EndHorizontal();
                 }
 

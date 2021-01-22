@@ -8,6 +8,7 @@ public class Actor : MonoBehaviour
 {
 	public Bone[] Bones = new Bone[0];
 	public bool DrawSkeleton = true;
+	public bool DrawVelocities = true;
 
 	private float BoneSize = 0.035f;
 	private Color BoneColor = Color.cyan;
@@ -73,6 +74,24 @@ public class Actor : MonoBehaviour
 			}
 		}
 
+		if (DrawVelocities)
+		{
+			for (int i = 0; i < Bones.Length; i++)
+			{
+				if (Bones[i].Visiable)
+				{
+					UltiDraw.DrawArrow(
+					Bones[i].Transform.position,
+					Bones[i].Transform.position + Bones[i].Velocity,
+					0.25f,
+					0.025f,
+					0.2f,
+					UltiDraw.DarkGreen.Transparent(0.5f)
+				    );
+				}
+			}
+		}
+
 		UltiDraw.End();
 	}
 
@@ -134,7 +153,6 @@ public class Actor : MonoBehaviour
 				if (parent != null)
 				{
 					bone.Parent = parent.Index;
-					bone.Level = parent.Level + 1;
 					ArrayExtensions.Add(ref parent.Childs, bone.Index);
 				}
 				parent = bone;
@@ -162,6 +180,7 @@ public class Actor : MonoBehaviour
 	{
 		public Actor Actor;
 		public Transform Transform;
+		public Vector3 Velocity;
 		public string Name;
 		public int Index;
 		public int Parent;
@@ -175,6 +194,7 @@ public class Actor : MonoBehaviour
 		{
 			Actor = actor;
 			Transform = transform;
+			Velocity = Vector3.zero;
 			Name = transform.name;
 			Index = index;
 			Parent = -1;
@@ -245,6 +265,7 @@ public class Actor : MonoBehaviour
 		public override void OnInspectorGUI()
 		{
 			Target.DrawSkeleton = EditorGUILayout.Toggle("Draw Skeleton", Target.DrawSkeleton);
+			Target.DrawVelocities = EditorGUILayout.Toggle("Draw Velocities", Target.DrawVelocities);
 			using (new EditorGUILayout.VerticalScope("Box"))
 			{
 				EditorGUILayout.BeginHorizontal();

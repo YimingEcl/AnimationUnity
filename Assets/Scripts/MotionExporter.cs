@@ -57,7 +57,7 @@ public class MotionExporter : MonoBehaviour
                 {
                     switch(data.Modules[k].GetID())
                     {
-                        case Module.ID.Emotion:
+                        case Module.ID.Action:
                         {
                             Lines[i] += "0 0 0 1 0 ";
                             Lines[i] += "0 0 0 1 0 ";
@@ -66,7 +66,7 @@ public class MotionExporter : MonoBehaviour
                         case Module.ID.Velocity:
                         {
                             VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
-                            module.GetVelocities(data.Frames[i]);
+                            module.GetVelocities(data.Frames[i], 1.0f);
                             for (int j = 0; j < data.Root.Bones.Length; j++)
                             {
                                 Lines[i] += module.Velocities[j].x.ToString() + " ";
