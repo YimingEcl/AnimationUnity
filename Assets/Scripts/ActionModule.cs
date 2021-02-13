@@ -86,6 +86,58 @@ public class ActionModule : Module
         return Data.Frames.Last();
     }
 
+    public string GetHotVector(Frame frame)
+    {
+        return GetHotVector(frame.Index);
+    }
+
+    public string GetHotVector(int index)
+    {
+        string result = string.Empty;
+        float[] Labels = new float[3];
+
+        for (int i = 0; i < Actions.Length; i++)
+        {
+            switch (Actions[i].Name)
+            {
+                case "Neutral":
+                    {
+                        if (Actions[i].Values[index] > 0)
+                            Labels[0] = 1.0f;
+                        else
+                            Labels[0] = 0.0f;
+                        break;
+                    }
+
+                case "LH on Hip":
+                    {
+                        if (Actions[i].Values[index] > 0)
+                            Labels[1] = 1.0f;
+                        else
+                            Labels[1] = 0.0f;
+                        break;
+                    }
+
+                case "RH on Hip":
+                    {
+                        if (Actions[i].Values[index] > 0)
+                            Labels[2] = 1.0f;
+                        else
+                            Labels[2] = 0.0f;
+                        break;
+                    }
+            }
+        }
+
+        for (int i = 0; i < Labels.Length - 1; i++)
+        {
+            result += Labels[i].ToString() + " ";
+        }
+        result += Labels[Labels.Length - 1].ToString();
+
+        return result;
+    }
+
     public override void DerivedInspector(MotionEditor editor)
     {
         Frame frame = editor.GetCurrentFrame();

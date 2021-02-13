@@ -5,7 +5,7 @@ using UnityEditor;
 
 public abstract class Module : ScriptableObject
 {
-    public enum ID { Phase, Action, Trajectory, Velocity, Root, PhaseA, Length };
+    public enum ID { Velocity, Action, Phase, Trajectory, Root, Length };
 
     public MotionData Data;
     private bool Visiable = false;

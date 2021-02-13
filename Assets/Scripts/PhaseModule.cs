@@ -4,19 +4,19 @@ using System;
 
 public class PhaseModule : Module
 {
-    public string[] PartName = {"Head", "LeftHand", "RightHand"};
+    private string[] PartName = {"LeftHand", "RightHand"};
+    private bool[] Bones = null;
 
-    public float VelocityThreshold = 0.1f;
-    public float PositionThreshold = 0.1f;
-    public bool[] Bones = null;
-    public float Window = 2.0f;
+    public float VelocityThreshold = 0.2f;
+    public float PositionThreshold = 0.2f;
+    public float Window = 0.5f;
 
     public bool ShowVelocities = true;
     public bool ShowPositions = true;
     public bool ShowKeys = true;
     public bool ShowCycle = true;
 
-    public LocalPhaseFunction[] Phases = new LocalPhaseFunction[3];
+    public LocalPhaseFunction[] Phases = new LocalPhaseFunction[2];
 
     public override ID GetID()
     {
@@ -28,9 +28,9 @@ public class PhaseModule : Module
         Data = data;
         Bones = new bool[Data.Root.Bones.Length];
 
-        Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
-        Phases[1] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
-        Phases[2] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+        //Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
+        Phases[0] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+        Phases[1] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
 
         return this;
     }
@@ -92,7 +92,7 @@ public class PhaseModule : Module
     {
         public PhaseModule Module;
         public float[] Phase;
-        public bool[] Keys;
+        public int[] Keys;
         public float[] Velocities;
         public float[] NVelocities;
         public float[] Positions;
@@ -102,7 +102,7 @@ public class PhaseModule : Module
         {
             Module = module;
             Phase = new float[module.Data.GetTotalFrames()];
-            Keys = new bool[module.Data.GetTotalFrames()];
+            Keys = new int[module.Data.GetTotalFrames()];
             ComputeVelocity();
             ComputePosition();
         }
@@ -177,12 +177,12 @@ public class PhaseModule : Module
 
                 float velocities = 0.0f;
 
-                for(int k = i; k < Mathf.Min(i + Module.Data.Framerate * Module.Window, Module.Data.GetTotalFrames()); k++)
+                for (int k = i; k < Mathf.Min(i + Module.Data.Framerate * Module.Window, Module.Data.GetTotalFrames()); k++)
                 {
                     velocities += Velocities[k];
                 }
 
-                if(velocities < Module.VelocityThreshold && Positions[i] != 0.0f)
+                if (velocities < Module.VelocityThreshold && Positions[i] != 0.0f)
                 {
                     toFrame = Module.Data.GetFrame(i);
                     toPosture = toFrame.GetBoneTransformations(true);
@@ -196,43 +196,104 @@ public class PhaseModule : Module
 
         public void ComputeKey()
         {
-            Keys = new bool[Module.Data.GetTotalFrames()];
-            for (int i = 1; i < Keys.Length; i++)
+            Keys = new int[Module.Data.GetTotalFrames()];
+            SetKey(Module.Data.GetFrame(1), 0);
+            SetKey(Module.Data.GetFrame(Keys.Length), 0);
+            for (int i = 1; i < Keys.Length - 1; i++)
             {
-                if((Positions[i-1] == 0.0f && Positions[i] != 0.0f) || (Positions[i-1] != 0.0f && Positions[i] == 0.0f))
-                {
-                    SetKey(Module.Data.GetFrame(i), true);
-                }
+                if (Positions[i - 1] == 0.0f && Positions[i] != 0.0f)
+                    SetKey(Module.Data.GetFrame(i + 1), -1);
+                else if(Positions[i - 1] != 0.0f && Positions[i] == 0.0f)
+                    SetKey(Module.Data.GetFrame(i + 1), 1);
             }
         }
 
-        public void SetKey(Frame frame, bool value)
+
+        public void SetKey(Frame frame, int type)
         {
-            if (value)
+            if (IsKey(frame))
             {
-                if (IsKey(frame))
-                {
-                    return;
-                }
-                Keys[frame.Index - 1] = true;
-                Phase[frame.Index - 1] = 1f;
-                Interpolate(frame);
+                Keys[frame.Index - 1] = 0;
+                Phase[frame.Index - 1] = 0.0f;
             }
-            else
+
+            if (type == -1)
             {
-                if (!IsKey(frame))
-                {
-                    return;
-                }
-                Keys[frame.Index - 1] = false;
-                Phase[frame.Index - 1] = 0f;
-                Interpolate(frame);
+                Keys[frame.Index - 1] = -1;
+                Phase[frame.Index - 1] = 0.0f;
             }
+            else if (type == 1)
+            {
+                Keys[frame.Index - 1] = 1;
+                Phase[frame.Index - 1] = 1.0f;
+            }
+
+            Interpolate(frame);
         }
 
         public bool IsKey(Frame frame)
         {
-            return Keys[frame.Index - 1];
+            return Keys[frame.Index - 1] != 0 ? true : false;
+        }
+
+        public bool IsInKey(Frame frame)
+        {
+            if (IsKey(frame))
+                return Keys[frame.Index - 1] == -1 ? true : false;
+            else
+                return false;
+        }
+
+        public bool IsOutKey(Frame frame)
+        {
+            if (IsKey(frame))
+                return Keys[frame.Index - 1] == 1 ? true : false;
+            else
+                return false;
+        }
+
+        public void Interpolate(Frame frame)
+        {
+            if (IsKey(frame))
+            {
+                Interpolate(GetPreviousKey(frame), frame);
+                Interpolate(frame, GetNextKey(frame));
+            }
+            else
+            {
+                Interpolate(GetPreviousKey(frame), GetNextKey(frame));
+            }
+        }
+
+        public void Interpolate(Frame a, Frame b)
+        {
+            if (a == null || b == null)
+            {
+                Debug.Log("A given frame was null.");
+                return;
+            }
+            if (a == b)
+            {
+                return;
+            }
+            if (Keys[a.Index - 1] == -1 && Keys[b.Index - 1] == 1)
+            {
+                int dist = b.Index - a.Index;
+                for (int i = a.Index + 1; i < b.Index; i++)
+                {
+                    float rateA = (float)((float)i - (float)a.Index) / (float)dist;
+                    float rateB = (float)((float)b.Index - (float)i) / (float)dist;
+                    Phase[i - 1] = rateB * Mathf.Repeat(Phase[a.Index - 1], 1f) + rateA * Phase[b.Index - 1];
+                }
+            }
+
+            else
+            {
+                for (int i = a.Index + 1; i < b.Index; i++)
+                {
+                    Phase[i - 1] = 0.0f;
+                }
+            }
         }
 
         public void SetPhase(Frame frame, float value)
@@ -255,7 +316,7 @@ public class PhaseModule : Module
             {
                 for (int i = frame.Index - 1; i >= 1; i--)
                 {
-                    if (Keys[i - 1])
+                    if (Keys[i - 1] != 0)
                     {
                         return Module.Data.Frames[i - 1];
                     }
@@ -270,90 +331,13 @@ public class PhaseModule : Module
             {
                 for (int i = frame.Index + 1; i <= Module.Data.GetTotalFrames(); i++)
                 {
-                    if (Keys[i - 1])
+                    if (Keys[i - 1] != 0)
                     {
                         return Module.Data.Frames[i - 1];
                     }
                 }
             }
             return Module.Data.Frames.Last();
-        }
-
-        private void Interpolate(Frame frame)
-        {
-            if (IsKey(frame))
-            {
-                Interpolate(GetPreviousKey(frame), frame);
-                Interpolate(frame, GetNextKey(frame));
-            }
-            else
-            {
-                Interpolate(GetPreviousKey(frame), GetNextKey(frame));
-            }
-        }
-
-        private void Interpolate(Frame a, Frame b)
-        {
-            if (a == null || b == null)
-            {
-                Debug.Log("A given frame was null.");
-                return;
-            }
-            if (a == b)
-            {
-                return;
-            }
-            if (a == Module.Data.Frames[0] && b == Module.Data.Frames[Module.Data.Frames.Length - 1])
-            {
-                return;
-            }
-            int dist = b.Index - a.Index;
-            if (dist >= 2)
-            {
-                for (int i = a.Index + 1; i < b.Index; i++)
-                {
-                    float rateA = (float)((float)i - (float)a.Index) / (float)dist;
-                    float rateB = (float)((float)b.Index - (float)i) / (float)dist;
-                    Phase[i - 1] = rateB * Mathf.Repeat(Phase[a.Index - 1], 1f) + rateA * Phase[b.Index - 1];
-                }
-            }
-
-            if (a.Index == 1)
-            {
-                Frame first = Module.Data.Frames[0];
-                Frame next1 = GetNextKey(first);
-                Frame next2 = GetNextKey(next1);
-                if (next2 == Module.Data.Frames[Module.Data.Frames.Length - 1])
-                {
-                    float ratio = 1f - next1.Timestamp / Module.Data.GetTotalTime();
-                    SetPhase(first, ratio);
-                    SetPhase(next2, ratio);
-                }
-                else
-                {
-                    float xFirst = next1.Timestamp - first.Timestamp;
-                    float mFirst = next2.Timestamp - next1.Timestamp;
-                    SetPhase(first, Mathf.Clamp(1f - xFirst / mFirst, 0f, 1f));
-                }
-            }
-            if (b.Index == Module.Data.GetTotalFrames())
-            {
-                Frame last = Module.Data.Frames[Module.Data.GetTotalFrames() - 1];
-                Frame previous1 = GetPreviousKey(last);
-                Frame previous2 = GetPreviousKey(previous1);
-                if (previous2 == Module.Data.Frames[0])
-                {
-                    float ratio = 1f - previous1.Timestamp / Module.Data.GetTotalTime();
-                    SetPhase(last, ratio);
-                    SetPhase(previous2, ratio);
-                }
-                else
-                {
-                    float xLast = last.Timestamp - previous1.Timestamp;
-                    float mLast = previous1.Timestamp - previous2.Timestamp;
-                    SetPhase(last, Mathf.Clamp(xLast / mLast, 0f, 1f));
-                }
-            }
         }
 
         public void Inspector(MotionEditor editor)
@@ -367,15 +351,24 @@ public class PhaseModule : Module
 
                 if (IsKey(frame))
                 {
-                    GUI.color = Color.red;
-                    if (GUILayout.Button("Key"))
-                        SetKey(frame, false);
+                    if (IsInKey(frame))
+                    {
+                        GUI.color = Color.red;
+                        if (GUILayout.Button("InKey"))
+                            SetKey(frame, 1);
+                    }
+                    else
+                    {
+                        GUI.color = Color.green;
+                        if (GUILayout.Button("OutKey"))
+                            SetKey(frame, 0);
+                    }
                 }
                 else
                 {
                     GUI.color = Color.white;
                     if (GUILayout.Button("Key"))
-                        SetKey(frame, true);
+                        SetKey(frame, -1);
                 }
                 GUI.color = Color.white;
 
@@ -449,32 +442,6 @@ public class PhaseModule : Module
                     }
                 }
 
-                //if (Module.ShowCycle)
-                //{
-                //    //Cycle
-                //    for (int i = 1; i < elements; i++)
-                //    {
-                //        prevPos.x = rect.xMin + (float)(i - 1) / (elements - 1) * rect.width;
-                //        prevPos.y = rect.yMax - NCycle[i + start - 1] * rect.height;
-                //        newPos.x = rect.xMin + (float)(i) / (elements - 1) * rect.width;
-                //        newPos.y = rect.yMax - NCycle[i + start] * rect.height;
-                //        UltiDraw.DrawLine(prevPos, newPos, UltiDraw.Yellow);
-                //    }
-                //}
-
-                //Phase
-                //for(int i=1; i<Module.Data.Frames.Length; i++) {
-                //	Frame A = Module.Data.Frames[i-1];
-                //	Frame B = Module.Data.Frames[i];
-                //	prevPos.x = rect.xMin + (float)(A.Index-start)/elements * rect.width;
-                //	prevPos.y = rect.yMax - Mathf.Repeat(Phase[A.Index-1], 1f) * rect.height;
-                //	newPos.x = rect.xMin + (float)(B.Index-start)/elements * rect.width;
-                //	newPos.y = rect.yMax - Phase[B.Index-1] * rect.height;
-                //	UltiDraw.DrawLine(prevPos, newPos, UltiDraw.White);
-                //	bottom.x = rect.xMin + (float)(B.Index-start)/elements * rect.width;
-                //	top.x = rect.xMin + (float)(B.Index-start)/elements * rect.width;
-                //}
-
                 if (Module.ShowKeys)
                 {
                     Frame A = Module.Data.GetFrame(start);
@@ -541,27 +508,6 @@ public class PhaseModule : Module
                     editor.LoadFrame(GetNextKey(frame));
                 }
                 EditorGUILayout.EndHorizontal();
-
-                //EditorGUILayout.BeginHorizontal();
-                //if (Utility.GUIButton("Fill Next", UltiDraw.DarkGrey, UltiDraw.White))
-                //{
-                //    editor.LoadFrame(Mathf.Clamp(editor.GetCurrentFrame().Timestamp + Module.Delta, 0f, Module.Data.GetTotalTime()));
-                //    SetKey(editor.GetCurrentFrame(), true);
-                //}
-                //if (Utility.GUIButton("Clear Next", UltiDraw.DarkGrey, UltiDraw.White))
-                //{
-                //    editor.LoadFrame(GetNextKey(editor.GetCurrentFrame()));
-                //    SetKey(editor.GetCurrentFrame(), false);
-                //}
-                //if (Utility.GUIButton("Separate", UltiDraw.DarkGrey, UltiDraw.White))
-                //{
-                //    Frame current = editor.GetCurrentFrame();
-                //    Frame next = GetNextKey(current);
-                //    Frame pivot = this == Module.RegularPhaseFunction ? Module.InversePhaseFunction.GetNextKey(current) : Module.RegularPhaseFunction.GetNextKey(current);
-                //    Frame previous = Module.Data.GetFrame(pivot.Timestamp - (next.Timestamp - pivot.Timestamp));
-                //    editor.LoadFrame(previous);
-                //}
-                //EditorGUILayout.EndHorizontal();
             }
             UltiDraw.End();
         }

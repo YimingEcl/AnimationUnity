@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
-using System.IO;
 
 public class MotionExporter : MonoBehaviour
 {
@@ -14,6 +13,8 @@ public class MotionExporter : MonoBehaviour
     public string[] Lines = null;
 
     public MotionEditor Editor = null;
+
+    private int[] Labels = new int[3];
 
     public void Load()
     {
@@ -31,78 +32,254 @@ public class MotionExporter : MonoBehaviour
         }
     }
 
-    public void Export(MotionData data)
+    public string[] GenerateLines(MotionData data)
     {
-        Lines = new string[data.Frames.Length];
-        for(int i = 0; i < data.Frames.Length; i++)
+        string[] result = new string[data.Frames.Length];
+
+        for (int i = 0; i < data.Frames.Length; i++)
         {
-            for(int j = 0; j < data.Root.Bones.Length; j++)
+            if (data.Modules != null)
             {
-                Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().x.ToString() + " ";
-                Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().y.ToString() + " ";
-                Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().z.ToString() + " ";
-            }
-
-            for(int j = 0; j < data.Root.Bones.Length; j++)
-            {
-                Vector3 euler = data.Frames[i].GetBoneTransformation(j, true).GetRotation().eulerAngles;
-                Lines[i] += euler.x.ToString() + " ";
-                Lines[i] += euler.y.ToString() + " ";
-                Lines[i] += euler.z.ToString() + " ";
-            }
-
-            if(data.Modules != null)
-            {
-                for(int k = 0; k < data.Modules.Length; k++)
+                for (int k = 0; k < data.Modules.Length; k++)
                 {
-                    switch(data.Modules[k].GetID())
+                    switch (data.Modules[k].GetID())
                     {
-                        case Module.ID.Action:
-                        {
-                            Lines[i] += "0 0 0 1 0 ";
-                            Lines[i] += "0 0 0 1 0 ";
-                            break;
-                        }
                         case Module.ID.Velocity:
-                        {
-                            VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
-                            module.GetVelocities(data.Frames[i], 1.0f);
-                            for (int j = 0; j < data.Root.Bones.Length; j++)
                             {
-                                Lines[i] += module.Velocities[j].x.ToString() + " ";
-                                Lines[i] += module.Velocities[j].y.ToString() + " ";
-                                Lines[i] += module.Velocities[j].z.ToString() + " ";
+                                VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
+                                module.GetTransformations(data.GetFrame(i));
+                                module.GetVelocities(data.GetFrame(i), 1.0f);
+                                for (int j = 0; j < data.Root.Bones.Length; j++)
+                                {
+                                    if (module.Selected[j])
+                                    {
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().x.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().y.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().z.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().x.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().y.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().z.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().x.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().y.ToString() + " ";
+                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().z.ToString() + " ";
+                                        Lines[i] += module.Velocities[j].x.ToString() + " ";
+                                        Lines[i] += module.Velocities[j].y.ToString() + " ";
+                                        Lines[i] += module.Velocities[j].z.ToString() + " ";
+                                    }
+                                }
+                                break;
                             }
 
-                            for(int j = 0; j < data.Root.Bones.Length; j++)
+                        case Module.ID.Action:
                             {
-                                Lines[i] += module.AngularVelocities[j].ToString() + " ";
+                                ActionModule module = (ActionModule)data.GetModule(Module.ID.Action);
+                                Lines[i] += module.GetHotVector(i) + " ";
+
+                                break;
                             }
-                            break;
-                        }
-                        case Module.ID.Root:
-                        {
-                            RootModule module = (RootModule)data.GetModule(Module.ID.Root);
-                            Vector3 pos = module.GetRootPosition(data.Frames[i], true);
-                            Lines[i] += pos.x.ToString() + " ";
-                            Lines[i] += pos.y.ToString() + " ";
-                            Lines[i] += pos.z.ToString() + " ";
-                            break;
-                        }
+
+                        case Module.ID.Phase:
+                            {
+                                PhaseModule module = (PhaseModule)data.GetModule(Module.ID.Phase);
+                                Lines[i] += module.Phases[0].LocalPhase.Phase[i] + " ";
+                                Lines[i] += module.Phases[1].LocalPhase.Phase[i] + " ";
+                                break;
+                            }
+
+                        case Module.ID.Trajectory:
+                            {
+                                TrajectoryModule module = (TrajectoryModule)data.GetModule(Module.ID.Trajectory);
+                                for (int j = 0; j < module.Pivots.Length; j++)
+                                {
+                                    for (int p = 0; p < module.Pivots[j].Transformations.Length; p++)
+                                    {
+                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().x.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().y.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().z.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].Velocities[p].x.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].Velocities[p].y.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].Velocities[p].z.ToString() + " ";
+                                        Lines[i] += module.Pivots[j].HotVectors[p] + " ";
+                                        Lines[i] += module.Pivots[j].Phases[p].ToString() + " ";
+                                    }
+                                }
+                                break;
+                            }
                     }
                 }
             }
         }
-        string InputFile = Destination + "/" + data.GetName() + "Input.txt";
 
-        using (var outputFile = new StreamWriter(InputFile))
+        return result;
+    }
+
+    public void ExportNormal(MotionData data)
+    {
+        Lines = GenerateLines(data);
+
+        string InputData = Destination + "/" + "Input.txt";
+        string OutputData = Destination + "/" + "Output.txt";
+
+        if (!File.Exists(InputData))
         {
-            foreach (string line in Lines)
-                outputFile.WriteLine(line);
+            using (FileStream fs = File.Create(InputData)) { }
+            Debug.Log("Create new file: " + InputData);
+            File.AppendAllLines(InputData, Lines);
+        }
+        else
+        {
+            File.AppendAllLines(InputData, Lines);
         }
 
-        Debug.Log("Export MotionData: " + data.GetName() + "Successfully!");
+        if (!File.Exists(OutputData))
+        {
+            using (FileStream fs = File.Create(OutputData)) { }
+            Debug.Log("Create new file: " + OutputData);
+            File.AppendAllLines(OutputData, Lines);
+        }
+        else
+        {
+            File.AppendAllLines(OutputData, Lines);
+        }
+
+        Debug.Log("Export Training MotionData: " + data.GetName() + "Successfully!");
     }
+
+    public void ExportTest(MotionData data)
+    {
+        Lines = GenerateLines(data);
+        string InputData = Destination + "/" + "TestInput.txt";
+        string OutputData = Destination + "/" + "TestOutput.txt";
+
+        if (!File.Exists(InputData))
+        {
+            using (FileStream fs = File.Create(InputData)) { }
+            Debug.Log("Create new file: " + InputData);
+            File.AppendAllLines(InputData, Lines);
+        }
+        else
+        {
+            File.AppendAllLines(InputData, Lines);
+        }
+
+        if (!File.Exists(OutputData))
+        {
+            using (FileStream fs = File.Create(OutputData)) { }
+            Debug.Log("Create new file: " + OutputData);
+            File.AppendAllLines(OutputData, Lines);
+        }
+        else
+        {
+            File.AppendAllLines(OutputData, Lines);
+        }
+
+        Debug.Log("Export Test MotionData: " + data.GetName() + "Successfully!");
+    }
+
+    public void ExportLabels(MotionData data)
+    {
+        Lines = new string[0];
+        if (data.Modules != null)
+        {
+            for (int k = 0; k < data.Modules.Length; k++)
+            {
+                switch (data.Modules[k].GetID())
+                {
+                    case Module.ID.Velocity:
+                        {
+                            VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
+                            module.GetTransformations(data.GetFrame(0));
+                            module.GetVelocities(data.GetFrame(0), 1.0f);
+                            for (int j = 0; j < data.Root.Bones.Length; j++)
+                            {
+                                if (module.Selected[j])
+                                {
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "PositionX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "PositionY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "PositionZ");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "ForwardX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "ForwardY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "ForwardZ");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "UpX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "UpY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "UpZ");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "VelocityX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "VelocityY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + data.Root.Bones[j].Name + "VelocityZ");
+                                }
+                            }
+                            break;
+                        }
+
+                    case Module.ID.Action:
+                        {
+                            ActionModule module = (ActionModule)data.GetModule(Module.ID.Action);
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action Neutral");
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action LHOnHip");
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action RHOnHip");
+
+                            break;
+                        }
+
+                    case Module.ID.Phase:
+                        {
+                            PhaseModule module = (PhaseModule)data.GetModule(Module.ID.Phase);
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Phase LeftHand");
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Phase RightHand");
+                            break;
+                        }
+
+                    case Module.ID.Trajectory:
+                        {
+                            TrajectoryModule module = (TrajectoryModule)data.GetModule(Module.ID.Trajectory);
+                            for (int j = 0; j < module.Pivots.Length; j++)
+                            {
+                                for (int p = 0; p < module.Pivots[j].Transformations.Length; p++)
+                                {
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() + 
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "PositionX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "PositionY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "PositionZ");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "VelocityX");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "VelocityY");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "VelocityZ");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action Neutral");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action LHOnHip");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action RHOnHip");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "Phase");
+                                }
+                            }
+                            break;
+                        }
+                }
+            }
+        }
+
+        string FileName = Destination + "/" + "Labels.txt";
+
+        if (!File.Exists(FileName))
+        {
+            using (FileStream fs = File.Create(FileName)) { }
+            Debug.Log("Create new file: " + FileName);
+            File.AppendAllLines(FileName, Lines);
+        }
+        else
+        {
+            File.WriteAllLines(FileName, Lines);
+        }
+
+        Debug.Log("Export Labels Successfully!");
+    }
+
 
     [CustomEditor(typeof(MotionExporter))]
     public class MotionExporterEditor : Editor
@@ -110,6 +287,7 @@ public class MotionExporter : MonoBehaviour
         public MotionExporter Target;
 
         private bool IsExist = false;
+        private bool Existed = false;
 
         private void Awake()
         {
@@ -158,14 +336,45 @@ public class MotionExporter : MonoBehaviour
                     EditorGUILayout.EndHorizontal();
                 }
 
-                if (GUILayout.Button("Export"))
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Export Training Data"))
                 {
+                    Existed = false;
                     for(int i = 0; i < Target.Files.Length; i++)
                     {
                         if (Target.Exports[i])
-                            Target.Export(Target.Files[i]);
+                        {
+                            if(!Existed)
+                            {
+                                Target.ExportNormal(Target.Files[i]);
+                                Target.ExportLabels(Target.Files[i]);
+                                Existed = true;
+                            }
+                            else
+                                Target.ExportNormal(Target.Files[i]);
+                        }
                     }
                 }
+
+                if (GUILayout.Button("Export Test Data"))
+                {
+                    Existed = false;
+                    for (int i = 0; i < Target.Files.Length; i++)
+                    {
+                        if (Target.Exports[i])
+                        {
+                            if (!Existed)
+                            {
+                                Target.ExportTest(Target.Files[i]);
+                                Target.ExportLabels(Target.Files[i]);
+                                Existed = true;
+                            }
+                            else
+                                Target.ExportTest(Target.Files[i]);
+                        }
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
             }
         }
     }

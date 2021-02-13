@@ -21,11 +21,11 @@ public class TrajectoryModule : Module
     public override Module Init(MotionData data)
     {
         Data = data;
-        SampleCount = 6;
-        SampleSize = 10;
+        SampleCount = 13;
+        SampleSize = 5;
         SampleFrame = new int[SampleCount + 1];
-        Pivots = new PivotBone[3];
-        PartName = new string[3] { "Head", "Left Hand", "Right Hand" };
+        Pivots = new PivotBone[2];
+        PartName = new string[2] {"Left Hand", "Right Hand" };
         Selected = new bool[Pivots.Length];
 
         InitPivot();
@@ -38,21 +38,21 @@ public class TrajectoryModule : Module
         int index = 0;
         string name = string.Empty;
         PivotBone bone = null;
-        MotionData.Hierarchy.Bone head = Data.Root.FindBoneContains("Head");
-        index = head == null ? 0 : head.Index;
-        name = head == null ? string.Empty : head.Name;
-        bone = new PivotBone(this, index, name);
-        Pivots[0] = bone;
+        //MotionData.Hierarchy.Bone head = Data.Root.FindBoneContains("Head");
+        //index = head == null ? 0 : head.Index;
+        //name = head == null ? string.Empty : head.Name;
+        //bone = new PivotBone(this, index, name);
+        //Pivots[0] = bone;
         MotionData.Hierarchy.Bone lh = Data.Root.FindBoneContains("LeftHand");
-        index = head == null ? 0 : lh.Index;
-        name = head == null ? string.Empty : lh.Name;
-        bone = new PivotBone(this, index, name);
-        Pivots[1] = bone;
+        index = lh == null ? 0 : lh.Index;
+        name = lh == null ? string.Empty : lh.Name;
+        bone = new PivotBone(this, 0, name);
+        Pivots[0] = bone;
         MotionData.Hierarchy.Bone rh = Data.Root.FindBoneContains("RightHand");
-        index = head == null ? 0 : rh.Index;
-        name = head == null ? string.Empty : rh.Name;
-        bone = new PivotBone(this, index, name);
-        Pivots[2] = bone;
+        index = rh == null ? 0 : rh.Index;
+        name = rh == null ? string.Empty : rh.Name;
+        bone = new PivotBone(this, 1, name);
+        Pivots[1] = bone;
     }
 
     public void InitFrame(int index)
@@ -61,7 +61,7 @@ public class TrajectoryModule : Module
         for(int i = 0; i < SampleFrame.Length; i++)
         {
             SampleFrame[i] = index;
-            index += 10;
+            index += SampleSize;
         }
     }
 
@@ -71,6 +71,8 @@ public class TrajectoryModule : Module
         {
             Pivots[i].GetTransformations();
             Pivots[i].GetVelocities();
+            Pivots[i].GetLabels();
+            Pivots[i].GetPhases();
         }
     }
 
@@ -115,12 +117,16 @@ public class TrajectoryModule : Module
                 EditorGUILayout.LabelField("VelocityX", GUILayout.Width(100.0f));
                 EditorGUILayout.LabelField("VelocityY", GUILayout.Width(100.0f));
                 EditorGUILayout.LabelField("VelocityZ", GUILayout.Width(100.0f));
+                EditorGUILayout.LabelField("Label", GUILayout.Width(100.0f));
+                EditorGUILayout.LabelField("Phase", GUILayout.Width(100.0f));
                 EditorGUILayout.EndHorizontal();
 
                 for (int j = 0; j < SampleCount; j++)
                 {
                     Matrix4x4 tf = Pivots[i].Transformations[j];
                     Vector3 v = Pivots[i].Velocities[j];
+                    string l = Pivots[i].HotVectors[j];
+                    float p = Pivots[i].Phases[j];
 
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField(j.ToString(), GUILayout.Width(40.0f));
@@ -130,6 +136,8 @@ public class TrajectoryModule : Module
                     EditorGUILayout.LabelField(v.x.ToString(), GUILayout.Width(100.0f));
                     EditorGUILayout.LabelField(v.y.ToString(), GUILayout.Width(100.0f));
                     EditorGUILayout.LabelField(v.z.ToString(), GUILayout.Width(100.0f));
+                    EditorGUILayout.LabelField(l, GUILayout.Width(100.0f));
+                    EditorGUILayout.LabelField(p.ToString(), GUILayout.Width(100.0f));
                     EditorGUILayout.EndHorizontal();
                 }
             }
@@ -139,26 +147,30 @@ public class TrajectoryModule : Module
     [Serializable]
     public class PivotBone
     {
-        public TrajectoryModule Module;
+        public TrajectoryModule TModule;
         public int Index = -1;
         public string Name = string.Empty;
         public Matrix4x4[] Transformations;
         public Vector3[] Velocities;
+        public string[] HotVectors;
+        public float[] Phases;
 
         public PivotBone(TrajectoryModule module, int index, string name)
         {
-            Module = module;
+            TModule = module;
             Index = index;
             Name = name;
-            Transformations = new Matrix4x4[Module.SampleFrame.Length];
-            Velocities = new Vector3[Module.SampleFrame.Length];
+            Transformations = new Matrix4x4[TModule.SampleFrame.Length];
+            Velocities = new Vector3[TModule.SampleFrame.Length];
+            HotVectors = new string[TModule.SampleFrame.Length];
+            Phases = new float[TModule.SampleFrame.Length];
         }
 
         public void GetTransformations()
         {
             for(int i = 0; i < Transformations.Length; i++)
             {
-                Transformations[i] = Module.Data.GetFrame(Module.SampleFrame[i]).GetBoneTransformation(Index, true);
+                Transformations[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneTransformation(Index, true);
             }
         }
 
@@ -166,7 +178,35 @@ public class TrajectoryModule : Module
         {
             for (int i = 0; i < Velocities.Length; i++)
             {
-                Velocities[i] = Module.Data.GetFrame(Module.SampleFrame[i]).GetBoneVelocity(Index, true, 1.0f);
+                Velocities[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneVelocity(Index, true, 1.0f);
+            }
+        }
+
+        public void GetLabels()
+        {
+            for(int i = 0; i < HotVectors.Length; i++)
+            {
+                if (TModule.SampleFrame[i] < 1 || TModule.SampleFrame[i] > TModule.Data.GetTotalFrames())
+                    HotVectors[i] = "0 0 0";
+                else
+                {
+                    ActionModule module = (ActionModule)TModule.Data.GetModule(Module.ID.Action);
+                    HotVectors[i] = module.GetHotVector(TModule.SampleFrame[i] - 1);
+                }
+            }
+        }
+
+        public void GetPhases()
+        {
+            for (int i = 0; i < Phases.Length; i++)
+            {
+                if (TModule.SampleFrame[i] < 1 || TModule.SampleFrame[i] > TModule.Data.GetTotalFrames() - 1)
+                    Phases[i] = 0.0f;
+                else
+                {
+                    PhaseModule module = (PhaseModule)TModule.Data.GetModule(Module.ID.Phase);
+                    Phases[i] = module.Phases[Index].LocalPhase.Phase[TModule.SampleFrame[i] - 1];
+                }
             }
         }
     }
