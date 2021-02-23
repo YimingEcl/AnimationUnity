@@ -53,6 +53,12 @@ public class PhaseModule : Module
         VelocityThreshold = EditorGUILayout.FloatField("Velocity Threshold", VelocityThreshold);
         PositionThreshold = EditorGUILayout.FloatField("Position Threshold", PositionThreshold);
 
+        if(Phases[0] == null)
+        {
+            Phases[0] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+            Phases[1] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+        }
+
         if (GUILayout.Button("Compute"))
         {
             for (int i = 0; i < Phases.Length; i++)

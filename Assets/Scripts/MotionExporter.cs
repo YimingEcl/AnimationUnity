@@ -34,9 +34,9 @@ public class MotionExporter : MonoBehaviour
 
     public string[] GenerateLines(MotionData data)
     {
-        string[] result = new string[data.Frames.Length];
+        string[] result = new string[data.Frames.Length - 60];
 
-        for (int i = 0; i < data.Frames.Length; i++)
+        for (int i = 30; i < data.Frames.Length-30; i++)
         {
             if (data.Modules != null)
             {
@@ -53,18 +53,18 @@ public class MotionExporter : MonoBehaviour
                                 {
                                     if (module.Selected[j])
                                     {
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().x.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().y.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().z.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().x.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().y.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetForward().z.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().x.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().y.ToString() + " ";
-                                        Lines[i] += data.Frames[i].GetBoneTransformation(j, true).GetUp().z.ToString() + " ";
-                                        Lines[i] += module.Velocities[j].x.ToString() + " ";
-                                        Lines[i] += module.Velocities[j].y.ToString() + " ";
-                                        Lines[i] += module.Velocities[j].z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().z.ToString() + " ";
+                                        result[i - 30] += module.Velocities[j].x.ToString() + " ";
+                                        result[i - 30] += module.Velocities[j].y.ToString() + " ";
+                                        result[i - 30] += module.Velocities[j].z.ToString() + " ";
                                     }
                                 }
                                 break;
@@ -73,7 +73,7 @@ public class MotionExporter : MonoBehaviour
                         case Module.ID.Action:
                             {
                                 ActionModule module = (ActionModule)data.GetModule(Module.ID.Action);
-                                Lines[i] += module.GetHotVector(i) + " ";
+                                result[i - 30] += module.GetHotVector(i) + " ";
 
                                 break;
                             }
@@ -81,8 +81,8 @@ public class MotionExporter : MonoBehaviour
                         case Module.ID.Phase:
                             {
                                 PhaseModule module = (PhaseModule)data.GetModule(Module.ID.Phase);
-                                Lines[i] += module.Phases[0].LocalPhase.Phase[i] + " ";
-                                Lines[i] += module.Phases[1].LocalPhase.Phase[i] + " ";
+                                result[i - 30] += module.Phases[0].LocalPhase.Phase[i] + " ";
+                                result[i - 30] += module.Phases[1].LocalPhase.Phase[i] + " ";
                                 break;
                             }
 
@@ -93,14 +93,14 @@ public class MotionExporter : MonoBehaviour
                                 {
                                     for (int p = 0; p < module.Pivots[j].Transformations.Length; p++)
                                     {
-                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().x.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().y.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].Transformations[p].GetPosition().z.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].Velocities[p].x.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].Velocities[p].y.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].Velocities[p].z.ToString() + " ";
-                                        Lines[i] += module.Pivots[j].HotVectors[p] + " ";
-                                        Lines[i] += module.Pivots[j].Phases[p].ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Transformations[p].GetPosition().x.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Transformations[p].GetPosition().y.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Transformations[p].GetPosition().z.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Velocities[p].x.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Velocities[p].y.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].Velocities[p].z.ToString() + " ";
+                                        result[i - 30] += module.Pivots[j].HotVectors[p] + " ";
+                                        result[i - 30] += module.Pivots[j].Phases[p].ToString() + " ";
                                     }
                                 }
                                 break;
