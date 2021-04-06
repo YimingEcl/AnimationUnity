@@ -1,5 +1,5 @@
 # Animation Unity
-Apply machine learning to predict and generate natural character motion for computer animation.
+Propose a new data processing method which is specific for conversational motion and apply local phase function to label conversational motion state. Apply machine learning to predict and generate natural character conversational motion for computer animation automatically.
 
 ## Data Process
 Process raw motion capture data to generate training data for machine learning.
