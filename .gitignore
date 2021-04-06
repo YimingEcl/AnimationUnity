@@ -46,3 +46,27 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
+
+# Ingored directory
+[Ll]ocalPackages/
+[Pp]ackages/
+[Pp]rojectSettings/
+[Aa]ssets/BVH/
+[Aa]ssets/BVHOrigin/
+[Aa]ssets/Export/
+[Aa]ssets/Parameters/
+[Aa]ssets/RawParameters/
+[Aa]ssets/Resources/
+[Aa]ssets/Scenes/
+[Aa]ssets/Plugins/Github/
+[Aa]ssets/New Folder/
+
+# Ingored meta file
+BVH.meta
+BVHOrigin.meta
+Export.meta
+Parameters.meta
+RawParameters.meta
+Resources.meta
+Scenes.meta
+New Folder.meta
