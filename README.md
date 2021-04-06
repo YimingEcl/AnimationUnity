@@ -13,4 +13,6 @@ Calculate possible loop motion phase.
 
 
 ## Runtime
-Build neural network model in Unity and generate character motion automatically with test data.
+Build neural network model in Unity and generate character motion automatically with test data. 
+
+Video link: https://youtu.be/azlkw3bm4Ig
