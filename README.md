@@ -10,7 +10,7 @@ Add data process modules.
 Calculate possible loop motion phase.
 ![Phase](https://media.githubusercontent.com/media/YimingEcl/AnimationUnity/master/Assets/ScreenShots/Phase.png)
 
-
+Video link: https://youtu.be/2lUqjrINxos
 
 ## Runtime
 Build neural network model in Unity and generate character motion automatically with test data. 
