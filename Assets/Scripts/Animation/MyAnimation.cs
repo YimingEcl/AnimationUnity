@@ -42,19 +42,23 @@ public class MyAnimation : NeuralAnimation
                                       "RightShoulder", "RightArm", "RightForeArm", "RightHand", "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase",
                                       "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase"};
         Vector3[] positions = new Vector3[name.Length];
+        Vector3[] forwards = new Vector3[name.Length];
+        Vector3[] upwards = new Vector3[name.Length];
+        Vector3[] velocities = new Vector3[name.Length];
 
         for (int i = 0; i < positions.Length; i++)
         {
             positions[i] = NeuralNetwork.ReadVector3();
-            Debug.Log(positions[i]);
-            NeuralNetwork.Pivot += 9;
+            forwards[i] = NeuralNetwork.ReadVector3().normalized;
+            upwards[i] = NeuralNetwork.ReadVector3().normalized;
+            velocities[i] = NeuralNetwork.ReadVector3();
         }
 
         for (int i = 0; i < positions.Length; i++)
         {
             Actor.Bone bone = Actor.FindBoneContains(name[i]);
             bone.Transform.position = positions[i];
+            bone.Transform.rotation = Quaternion.LookRotation(forwards[i], upwards[i]);
         }
     }
-
 }
