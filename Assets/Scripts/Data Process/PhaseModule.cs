@@ -4,8 +4,8 @@ using System;
 
 public class PhaseModule : Module
 {
-    private string[] PartName = {"LeftHand", "RightHand"};
     private bool[] Bones = null;
+    private bool Record = false;
 
     public float VelocityThreshold = 0.2f;
     public float PositionThreshold = 0.2f;
@@ -16,7 +16,7 @@ public class PhaseModule : Module
     public bool ShowKeys = true;
     public bool ShowCycle = true;
 
-    public LocalPhaseFunction[] Phases = new LocalPhaseFunction[2];
+    public LocalPhaseFunction[] Phases = new LocalPhaseFunction[3];
 
     public override ID GetID()
     {
@@ -26,11 +26,22 @@ public class PhaseModule : Module
     public override Module Init(MotionData data)
     {
         Data = data;
+        Record = Data.Mirrored;
         Bones = new bool[Data.Root.Bones.Length];
 
-        //Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
-        Phases[0] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
-        Phases[1] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+        Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
+        if(Data.Mirrored)
+        {
+            Phases[1] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+            Phases[2] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+        }
+        else
+        {
+            Phases[1] = new LocalPhaseFunction("Left Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+            Phases[2] = new LocalPhaseFunction("Right Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+        }
+
+        Compute();
 
         return this;
     }
@@ -43,33 +54,46 @@ public class PhaseModule : Module
         }
     }
 
+    public void Compute()
+    {
+        for (int i = 0; i < Phases.Length; i++)
+        {
+            ToggleBone(Phases[i].Index, Phases[i].LocalPhase);
+            Phases[i].LocalPhase.ComputeVelocity();
+            Phases[i].LocalPhase.ComputePosition();
+            Phases[i].LocalPhase.ComputeKey();
+            ToggleBone(Phases[i].Index, Phases[i].LocalPhase);
+        }
+    }
+
     public override void DerivedInspector(MotionEditor editor)
     {
         ShowVelocities = EditorGUILayout.Toggle("Show Velocities", ShowVelocities);
         ShowPositions = EditorGUILayout.Toggle("Show Positions", ShowPositions);
         ShowKeys = EditorGUILayout.Toggle("Show Keys", ShowKeys);
-        //ShowCycle = EditorGUILayout.Toggle("Show Cycle", ShowCycle);
         Window = EditorGUILayout.FloatField("Window Time", Window);
         VelocityThreshold = EditorGUILayout.FloatField("Velocity Threshold", VelocityThreshold);
         PositionThreshold = EditorGUILayout.FloatField("Position Threshold", PositionThreshold);
 
-        if(Phases[0] == null)
+        if(Phases[0] == null || Record != Data.Mirrored)
         {
-            Phases[0] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
-            Phases[1] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+            Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
+            if (Data.Mirrored)
+            {
+                Phases[1] = new LocalPhaseFunction("Left Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+                Phases[2] = new LocalPhaseFunction("Right Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+            }
+            else
+            {
+                Phases[1] = new LocalPhaseFunction("Left Hand", new int[5] { 12, 13, 14, 15, 16 }, this);
+                Phases[2] = new LocalPhaseFunction("Right Hand", new int[5] { 7, 8, 9, 10, 11 }, this);
+            }
+            Record = Data.Mirrored;
+            Compute();
         }
 
         if (GUILayout.Button("Compute"))
-        {
-            for (int i = 0; i < Phases.Length; i++)
-            {
-                ToggleBone(Phases[i].Index, Phases[i].LocalPhase);
-                Phases[i].LocalPhase.ComputeVelocity();
-                Phases[i].LocalPhase.ComputePosition();
-                Phases[i].LocalPhase.ComputeKey();
-                ToggleBone(Phases[i].Index, Phases[i].LocalPhase);
-            }
-        }
+            Compute();
 
         for (int i = 0; i < Phases.Length; i++)
         {
@@ -126,7 +150,7 @@ public class PhaseModule : Module
                 for (int j = 0; j < Module.Bones.Length; j++)
                 {
                     if (Module.Bones[j])
-                        Velocities[i] = Mathf.Min(Module.Data.Frames[i].GetBoneVelocity(j, true, 1f / Module.Data.Framerate).magnitude, 1.0f);
+                        Velocities[i] = Mathf.Min(Module.Data.Frames[i].GetBoneVelocity(j, Module.Data.Mirrored, 1f / Module.Data.Framerate).magnitude, 1.0f);
                 }
                 if (Velocities[i] < Module.VelocityThreshold)
                 {
@@ -156,11 +180,11 @@ public class PhaseModule : Module
             min = float.MaxValue;
             max = float.MinValue;
             Frame toFrame = Module.Data.GetFrame(5);
-            Matrix4x4[] toPosture = toFrame.GetBoneTransformations(true);
+            Matrix4x4[] toPosture = toFrame.GetBoneTransformations(Module.Data.Mirrored);
 
             for (int i = 0; i < Positions.Length; i++)
             {
-                Posture = Module.Data.Frames[i].GetBoneTransformations(true);
+                Posture = Module.Data.Frames[i].GetBoneTransformations(Module.Data.Mirrored);
                 for (int j = 0; j < Module.Bones.Length; j++)
                 {
                     if (Module.Bones[j])
@@ -192,7 +216,7 @@ public class PhaseModule : Module
                 if (velocities < Module.VelocityThreshold && Positions[i] != 0.0f)
                 {
                     toFrame = Module.Data.GetFrame(i);
-                    toPosture = toFrame.GetBoneTransformations(true);
+                    toPosture = toFrame.GetBoneTransformations(Module.Data.Mirrored);
                 }
             }
             for (int i = 0; i < Positions.Length; i++)
@@ -477,21 +501,6 @@ public class PhaseModule : Module
                     }
                 }
 
-                //Seconds
-                float timestamp = startTime;
-                while (timestamp <= endTime)
-                {
-                    float floor = Mathf.FloorToInt(timestamp);
-                    if (floor >= startTime && floor <= endTime)
-                    {
-                        top.x = rect.xMin + (float)(Module.Data.GetFrame(floor).Index - start) / elements * rect.width;
-                        UltiDraw.DrawWireCircle(top, 5f, UltiDraw.White);
-                    }
-                    timestamp += 1f;
-                }
-                //
-
-                //Current Pivot
                 float pStart = (float)(Module.Data.GetFrame(Mathf.Clamp(frame.Timestamp - 1f, 0f, Module.Data.GetTotalTime())).Index - start) / (float)elements;
                 float pEnd = (float)(Module.Data.GetFrame(Mathf.Clamp(frame.Timestamp + 1f, 0f, Module.Data.GetTotalTime())).Index - start) / (float)elements;
                 float pLeft = rect.x + pStart * rect.width;
@@ -506,7 +515,7 @@ public class PhaseModule : Module
                 bottom.x = rect.xMin + (float)(frame.Index - start) / elements * rect.width;
                 UltiDraw.DrawLine(top, bottom, UltiDraw.Yellow);
 
-                Handles.DrawLine(Vector3.zero, Vector3.zero); //Somehow needed to get it working...
+                Handles.DrawLine(Vector3.zero, Vector3.zero); 
                 EditorGUILayout.EndVertical();
 
                 if (GUILayout.Button(">", GUILayout.Width(25.0f), GUILayout.Height(50.0f)))

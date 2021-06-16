@@ -11,7 +11,6 @@ public class MotionEditor : MonoBehaviour
     public string Folder = string.Empty;
     public int Index = 0;
     public bool Playing = false;
-    public bool Mirrored = true;
 
     private float Timestamp = 0.0f;
     private BoneMap[] Map = null;
@@ -30,7 +29,17 @@ public class MotionEditor : MonoBehaviour
         for (int i = 0; i < Data.Root.Bones.Length; i++)
         {
             Map[i].BvhBoneName = Data.Root.Bones[i].Name;
-            Actor.Bone bone = GetActor().FindBoneContains(Data.Root.Bones[i].Name);
+            string name = Data.Root.Bones[i].Name;
+
+            if (!Data.Mirrored)
+            {
+                if (name.Contains("Left"))
+                    name = name.Replace("Left", "Right");
+                else if (name.Contains("Right"))
+                    name = name.Replace("Right", "Left");
+            }
+            
+            Actor.Bone bone = GetActor().FindBoneContains(name);
             if (bone == null)
                 Map[i].ActorBoneTransform = null;
             else
@@ -44,6 +53,11 @@ public class MotionEditor : MonoBehaviour
             Map = new BoneMap[0];
         else if (Map == null)
             AutoMap();
+        else if (Data.MirrorChanged)
+        {
+            AutoMap();
+            Data.MirrorChanged = false;
+        }
     }
 
     public MotionData GetData()
@@ -118,8 +132,8 @@ public class MotionEditor : MonoBehaviour
         Timestamp = timestamp;
         Actor actor = GetActor();
         Frame frame = GetCurrentFrame();
-        Matrix4x4 root = frame.GetBoneTransformation(0, Mirrored);
-        actor.transform.position = root.GetPosition();
+        Matrix4x4 root = frame.GetBoneTransformation(0, Data.Mirrored);
+        actor.transform.position = root.GetPosition(); 
         actor.transform.rotation = root.GetRotation();
         UpdateBoneMapping();
 
@@ -128,10 +142,10 @@ public class MotionEditor : MonoBehaviour
             BoneMap map = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
             if (map.BvhBoneName != null)
             {
-                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, Mirrored);
+                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, Data.Mirrored);
                 actor.Bones[i].Transform.position = transformation.GetPosition();
                 actor.Bones[i].Transform.rotation = transformation.GetRotation();
-                actor.Bones[i].Velocity = frame.GetBoneVelocity(map.BvhBoneName, Mirrored, 1.0f / 30);
+                actor.Bones[i].Velocity = frame.GetBoneVelocity(map.BvhBoneName, Data.Mirrored, 1.0f / 30);
             }
         }
     }
@@ -265,10 +279,13 @@ public class MotionEditor : MonoBehaviour
                     if (Event.current.type == EventType.Used)
                         Target.LoadData(Target.Files[sliderIndex - 1]);
                     EditorGUILayout.LabelField("/ " + Target.Files.Length, GUILayout.Width(60.0f));
-                    //GUI.color = Target.Mirrored ? Color.red : Color.white;
-                    //if(GUILayout.Button("Mirror"))
-                    //    Target.Mirrored = !Target.Mirrored;
-                    //GUI.color = Color.white;
+                    GUI.color = Target.Data.Mirrored ? Color.red : Color.white;
+                    if (GUILayout.Button("Mirror"))
+                    {
+                        Target.Data.Mirrored = !Target.Data.Mirrored;
+                        Target.Data.MirrorChanged = true;
+                    }
+                    GUI.color = Color.white;
                     EditorGUILayout.EndHorizontal();
                 }
 
@@ -343,6 +360,8 @@ public class MotionEditor : MonoBehaviour
 
                 for (int i = 0; i < Target.Data.Modules.Length; i++)
                     Target.Data.Modules[i].Inspector(Target);
+
+                EditorUtility.SetDirty(this);
             }
         }
     }

@@ -60,6 +60,7 @@ crashlytics-build.properties
 [Aa]ssets/Scenes/
 [Aa]ssets/Plugins/GitHub/
 [Aa]ssets/New Folder/
+[Aa]ssets/MotionData/
 
 # Ingored meta file
 BVH.meta

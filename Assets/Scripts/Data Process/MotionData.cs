@@ -12,6 +12,8 @@ public class MotionData : ScriptableObject
     public float Framerate = 30.0f;
     public Vector3 Offset = Vector3.zero;
     public float Scale = 1.0f;
+    public bool Mirrored = true;
+    public bool MirrorChanged = false;
     public Axis MirrorAxis = Axis.XPositive; // Maya to Unity;
 
     public string GetName()

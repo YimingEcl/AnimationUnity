@@ -14,8 +14,6 @@ public class MotionExporter : MonoBehaviour
 
     public MotionEditor Editor = null;
 
-    private int[] Labels = new int[3];
-
     public void Load()
     {
         string[] guids = AssetDatabase.FindAssets("t:MotionData", new string[1] { Folder });
@@ -53,15 +51,15 @@ public class MotionExporter : MonoBehaviour
                                 {
                                     if (module.Selected[j])
                                     {
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().x.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().y.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetPosition().z.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().x.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().y.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetForward().z.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().x.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().y.ToString() + " ";
-                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, true).GetUp().z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetPosition().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetPosition().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetPosition().z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetForward().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetForward().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetForward().z.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetUp().x.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetUp().y.ToString() + " ";
+                                        result[i - 30] += data.Frames[i].GetBoneTransformation(j, data.Mirrored).GetUp().z.ToString() + " ";
                                         result[i - 30] += module.Velocities[j].x.ToString() + " ";
                                         result[i - 30] += module.Velocities[j].y.ToString() + " ";
                                         result[i - 30] += module.Velocities[j].z.ToString() + " ";

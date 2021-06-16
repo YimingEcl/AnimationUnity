@@ -40,22 +40,22 @@ public class VelocityModule : Module
 
     public void GetTransformations(Frame frame)
     {
-        Transformations = frame.GetBoneTransformations(true);
+        Transformations = frame.GetBoneTransformations(Data.Mirrored);
     }
 
     public void GetVelocities(Frame frame, float delta)
     {
-        Velocities = frame.GetBoneVelocities(true, delta);
+        Velocities = frame.GetBoneVelocities(Data.Mirrored, delta);
     }
 
     public void GetAccelerations(Frame frame, float delta)
     {
-        Accelerations = frame.GetBoneAccelerations(true, delta);
+        Accelerations = frame.GetBoneAccelerations(Data.Mirrored, delta);
     }
 
     public void GetAngularVelocities(Frame frame, float delta)
     {
-        AngularVelocities = frame.GetAngularBoneVelocities(true, delta);
+        AngularVelocities = frame.GetAngularBoneVelocities(Data.Mirrored, delta);
     }
 
     public override void DerivedInspector(MotionEditor editor)

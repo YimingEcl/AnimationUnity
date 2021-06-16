@@ -46,12 +46,12 @@ public class TrajectoryModule : Module
         MotionData.Hierarchy.Bone lh = Data.Root.FindBoneContains("LeftHand");
         index = lh == null ? 0 : lh.Index;
         name = lh == null ? string.Empty : lh.Name;
-        bone = new PivotBone(this, 0, name);
+        bone = new PivotBone(this, index, name);
         Pivots[0] = bone;
         MotionData.Hierarchy.Bone rh = Data.Root.FindBoneContains("RightHand");
         index = rh == null ? 0 : rh.Index;
         name = rh == null ? string.Empty : rh.Name;
-        bone = new PivotBone(this, 1, name);
+        bone = new PivotBone(this, index, name);
         Pivots[1] = bone;
     }
 
@@ -72,7 +72,7 @@ public class TrajectoryModule : Module
             Pivots[i].GetTransformations();
             Pivots[i].GetVelocities();
             Pivots[i].GetLabels();
-            Pivots[i].GetPhases();
+            Pivots[i].GetPhases(i);
         }
     }
 
@@ -172,7 +172,7 @@ public class TrajectoryModule : Module
         {
             for(int i = 0; i < Transformations.Length; i++)
             {
-                Transformations[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneTransformation(Index, true);
+                Transformations[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneTransformation(Index, TModule.Data.Mirrored);
             }
         }
 
@@ -180,7 +180,7 @@ public class TrajectoryModule : Module
         {
             for (int i = 0; i < Velocities.Length; i++)
             {
-                Velocities[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneVelocity(Index, true, 1.0f);
+                Velocities[i] = TModule.Data.GetFrame(TModule.SampleFrame[i]).GetBoneVelocity(Index, TModule.Data.Mirrored, 1.0f);
             }
         }
 
@@ -202,7 +202,7 @@ public class TrajectoryModule : Module
             }
         }
 
-        public void GetPhases()
+        public void GetPhases(int index)
         {
             for (int i = 0; i < Phases.Length; i++)
             {
@@ -211,7 +211,7 @@ public class TrajectoryModule : Module
                 else
                 {
                     PhaseModule module = (PhaseModule)TModule.Data.GetModule(Module.ID.Phase);
-                    Phases[i] = module.Phases[Index].LocalPhase.Phase[TModule.SampleFrame[i] - 1];
+                    Phases[i] = module.Phases[index+1].LocalPhase.Phase[TModule.SampleFrame[i] - 1];
                 }
             }
         }
