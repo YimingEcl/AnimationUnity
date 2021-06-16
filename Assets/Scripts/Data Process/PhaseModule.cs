@@ -4,9 +4,6 @@ using System;
 
 public class PhaseModule : Module
 {
-    private bool[] Bones = null;
-    private bool Record = false;
-
     public float VelocityThreshold = 0.2f;
     public float PositionThreshold = 0.2f;
     public float Window = 0.5f;
@@ -15,6 +12,10 @@ public class PhaseModule : Module
     public bool ShowPositions = true;
     public bool ShowKeys = true;
     public bool ShowCycle = true;
+
+    private bool[] Bones = null;
+    private bool[] Visiable = null;
+    private bool Record = false;
 
     public LocalPhaseFunction[] Phases = new LocalPhaseFunction[3];
 
@@ -26,8 +27,10 @@ public class PhaseModule : Module
     public override Module Init(MotionData data)
     {
         Data = data;
-        Record = Data.Mirrored;
         Bones = new bool[Data.Root.Bones.Length];
+        Visiable = new bool[] { true, true, true };
+        Record = Data.Mirrored;
+
 
         Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
         if(Data.Mirrored)
@@ -97,8 +100,13 @@ public class PhaseModule : Module
 
         for (int i = 0; i < Phases.Length; i++)
         {
+            EditorGUILayout.BeginHorizontal();
+            Visiable[i] = EditorGUILayout.Toggle(Visiable[i], GUILayout.Width(20.0f));
             EditorGUILayout.LabelField(Phases[i].Name);
-            Phases[i].LocalPhase.Inspector(editor);
+            EditorGUILayout.EndHorizontal();
+
+            if (Visiable[i])
+                Phases[i].LocalPhase.Inspector(editor);
         }
     }
 

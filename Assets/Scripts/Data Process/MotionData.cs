@@ -14,7 +14,7 @@ public class MotionData : ScriptableObject
     public float Scale = 1.0f;
     public bool Mirrored = true;
     public bool MirrorChanged = false;
-    public Axis MirrorAxis = Axis.XPositive; // Maya to Unity;
+    public Axis MirrorAxis = Axis.XPositive; // MotionBuilder to Unity;
 
     public string GetName()
     {

@@ -130,6 +130,7 @@ public class Actor : MonoBehaviour
 			{
 				bone.Parent = parent.Index;
 				bone.Level = parent.Level + 1;
+				bone.ComputeLength();
 				ArrayExtensions.Add(ref parent.Childs, bone.Index);
 			}
 			parent = bone;
@@ -153,6 +154,7 @@ public class Actor : MonoBehaviour
 				if (parent != null)
 				{
 					bone.Parent = parent.Index;
+					bone.ComputeLength();
 					ArrayExtensions.Add(ref parent.Childs, bone.Index);
 				}
 				parent = bone;
@@ -233,12 +235,12 @@ public class Actor : MonoBehaviour
 
 		public float GetLength()
 		{
-			return GetParent() == null ? 0f : Vector3.Distance(GetParent().Transform.position, Transform.position);
+			return Length;
 		}
 
 		public void ComputeLength()
 		{
-			Length = GetLength();
+			Length = GetParent() == null ? 0f : Vector3.Distance(GetParent().Transform.position, Transform.position);
 		}
 
 		public void ApplyLength()

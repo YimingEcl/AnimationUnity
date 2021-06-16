@@ -137,15 +137,18 @@ public class MotionEditor : MonoBehaviour
         actor.transform.rotation = root.GetRotation();
         UpdateBoneMapping();
 
-        for (int i = 0; i < actor.Bones.Length; i++)
+        for (int i = 1; i < actor.Bones.Length; i++)
         {
-            BoneMap map = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
-            if (map.BvhBoneName != null)
+            BoneMap current = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
+            BoneMap parent = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].GetParent().Transform);
+            if (current.BvhBoneName != null)
             {
-                Matrix4x4 transformation = frame.GetBoneTransformation(map.BvhBoneName, Data.Mirrored);
-                actor.Bones[i].Transform.position = transformation.GetPosition();
-                actor.Bones[i].Transform.rotation = transformation.GetRotation();
-                actor.Bones[i].Velocity = frame.GetBoneVelocity(map.BvhBoneName, Data.Mirrored, 1.0f / 30);
+                float length = actor.Bones[i].GetLength();
+                Matrix4x4 currentT = frame.GetBoneTransformation(current.BvhBoneName, Data.Mirrored);
+                Matrix4x4 parentT = frame.GetBoneTransformation(parent.BvhBoneName, Data.Mirrored);
+                actor.Bones[i].Transform.position = parentT.GetPosition() + Vector3.Normalize(currentT.GetPosition() - parentT.GetPosition()) * length;
+                actor.Bones[i].Transform.rotation = currentT.GetRotation();
+                actor.Bones[i].Velocity = frame.GetBoneVelocity(current.BvhBoneName, Data.Mirrored, 1.0f / 30);
             }
         }
     }
