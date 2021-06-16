@@ -15,4 +15,4 @@ Video link: https://youtu.be/2lUqjrINxos
 ## Runtime
 Build neural network model in Unity and generate character motion automatically with test data. 
 
-Video link: https://youtu.be/azlkw3bm4Ig
+Video link: https://youtu.be/V0khXztM8gA
