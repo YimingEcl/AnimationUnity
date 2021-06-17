@@ -9,12 +9,13 @@ public class Actor : MonoBehaviour
 	public Bone[] Bones = new Bone[0];
 	public bool DrawSkeleton = true;
 	public bool DrawVelocities = true;
+	public bool DrawTransforms = true;
+	public bool TargetRoot = true;
 
 	private float BoneSize = 0.035f;
 	private Color BoneColor = Color.cyan;
 	private Color JointColor = Color.red;
-
-	private void Reset()
+    private void Reset()
 	{
 		ExtractSkeleton();
 	}
@@ -27,9 +28,7 @@ public class Actor : MonoBehaviour
 	private void OnDrawGizmos()
 	{
 		if (!Application.isPlaying)
-		{
 			OnRenderObject();
-		}
 	}
 
 	public void Draw()
@@ -44,12 +43,14 @@ public class Actor : MonoBehaviour
 		if(DrawSkeleton)
 		{
 			Action<Bone> recursion = null;
-			recursion = new Action<Bone>((bone) => {
+			recursion = new Action<Bone>((bone) => 
+			{
 				if(bone.Visiable)
                 {
 					if (bone.GetParent() != null)
 					{
-						UltiDraw.DrawBone(
+						UltiDraw.DrawBone
+						(
 							bone.GetParent().Transform.position,
 							Quaternion.FromToRotation(bone.GetParent().Transform.forward, bone.Transform.position - bone.GetParent().Transform.position) * bone.GetParent().Transform.rotation,
 							12.5f * BoneSize * bone.GetLength(), bone.GetLength(),
@@ -64,14 +65,10 @@ public class Actor : MonoBehaviour
 					);
 				}
 				for (int i = 0; i < bone.Childs.Length; i++)
-				{
 					recursion(bone.GetChild(i));
-				}
 			});
 			if (Bones.Length > 0)
-			{
 				recursion(Bones[0]);
-			}
 		}
 
 		if (DrawVelocities)
@@ -89,6 +86,24 @@ public class Actor : MonoBehaviour
 					UltiDraw.DarkGreen.Transparent(0.5f)
 				    );
 				}
+			}
+		}
+
+		if (DrawTransforms)
+		{
+			Action<Bone> recursion = null;
+			recursion = new Action<Bone>((bone) => 
+			{
+				if(bone.Visiable)
+                {
+					UltiDraw.DrawTranslateGizmo(bone.Transform.position, bone.Transform.rotation, 0.05f);
+					for (int i = 0; i < bone.Childs.Length; i++)
+						recursion(bone.GetChild(i));
+				}
+			});
+			if (Bones.Length > 0)
+			{
+				recursion(Bones[0]);
 			}
 		}
 
@@ -202,7 +217,7 @@ public class Actor : MonoBehaviour
 			Parent = -1;
 			Childs = new int[0];
 			Level = 0;
-			Length = GetLength();
+			Length = 0.0f;
 			Visiable = true;
 		}
 
@@ -268,6 +283,8 @@ public class Actor : MonoBehaviour
 		{
 			Target.DrawSkeleton = EditorGUILayout.Toggle("Draw Skeleton", Target.DrawSkeleton);
 			Target.DrawVelocities = EditorGUILayout.Toggle("Draw Velocities", Target.DrawVelocities);
+			Target.DrawTransforms = EditorGUILayout.Toggle("Draw Transforms", Target.DrawTransforms);
+			Target.TargetRoot = EditorGUILayout.Toggle("Set Root by BVH Data", Target.TargetRoot);
 			using (new EditorGUILayout.VerticalScope("Box"))
 			{
 				EditorGUILayout.BeginHorizontal();

@@ -133,7 +133,11 @@ public class MotionEditor : MonoBehaviour
         Actor actor = GetActor();
         Frame frame = GetCurrentFrame();
         Matrix4x4 root = frame.GetBoneTransformation(0, Data.Mirrored);
-        actor.transform.position = root.GetPosition(); 
+        if (actor.TargetRoot)
+            actor.transform.position = new Vector3(root.GetPosition().x, actor.transform.position.y, root.GetPosition().z);
+        else
+            actor.transform.localPosition = new Vector3(0.0f, actor.transform.position.y, 0.0f);
+
         actor.transform.rotation = root.GetRotation();
         UpdateBoneMapping();
 
@@ -146,12 +150,37 @@ public class MotionEditor : MonoBehaviour
                 float length = actor.Bones[i].GetLength();
                 Matrix4x4 currentT = frame.GetBoneTransformation(current.BvhBoneName, Data.Mirrored);
                 Matrix4x4 parentT = frame.GetBoneTransformation(parent.BvhBoneName, Data.Mirrored);
-                actor.Bones[i].Transform.position = parentT.GetPosition() + Vector3.Normalize(currentT.GetPosition() - parentT.GetPosition()) * length;
+                actor.Bones[i].Transform.position = actor.Bones[i].GetParent().Transform.position 
+                    + Vector3.Normalize(currentT.GetPosition() - parentT.GetPosition()) * length;
                 actor.Bones[i].Transform.rotation = currentT.GetRotation();
                 actor.Bones[i].Velocity = frame.GetBoneVelocity(current.BvhBoneName, Data.Mirrored, 1.0f / 30);
             }
         }
     }
+
+    // old load frame function
+    //public void LoadFrame(float timestamp)
+    //{
+    //    Timestamp = timestamp;
+    //    Actor actor = GetActor();
+    //    Frame frame = GetCurrentFrame();
+    //    Matrix4x4 root = frame.GetBoneTransformation(0, Data.Mirrored);
+    //    actor.transform.position = root.GetPosition();
+    //    actor.transform.rotation = root.GetRotation();
+    //    UpdateBoneMapping();
+
+    //    for (int i = 0; i < actor.Bones.Length; i++)
+    //    {
+    //        BoneMap current = Array.Find(Map, x => x.ActorBoneTransform == actor.Bones[i].Transform);
+    //        if (current.BvhBoneName != null)
+    //        {
+    //            Matrix4x4 currentT = frame.GetBoneTransformation(current.BvhBoneName, Data.Mirrored);
+    //            actor.Bones[i].Transform.position = currentT.GetPosition();
+    //            actor.Bones[i].Transform.rotation = currentT.GetRotation();
+    //            actor.Bones[i].Velocity = frame.GetBoneVelocity(current.BvhBoneName, Data.Mirrored, 1.0f / 30);
+    //        }
+    //    }
+    //}
 
     public void LoadFrame(int index)
     {

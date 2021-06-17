@@ -14,7 +14,6 @@ public class PhaseModule : Module
     public bool ShowCycle = true;
 
     private bool[] Bones = null;
-    private bool[] Visiable = null;
     private bool Record = false;
 
     public LocalPhaseFunction[] Phases = new LocalPhaseFunction[3];
@@ -28,7 +27,6 @@ public class PhaseModule : Module
     {
         Data = data;
         Bones = new bool[Data.Root.Bones.Length];
-        Visiable = new bool[] { true, true, true };
         Record = Data.Mirrored;
 
 
@@ -101,11 +99,11 @@ public class PhaseModule : Module
         for (int i = 0; i < Phases.Length; i++)
         {
             EditorGUILayout.BeginHorizontal();
-            Visiable[i] = EditorGUILayout.Toggle(Visiable[i], GUILayout.Width(20.0f));
+            Phases[i].Visiable = EditorGUILayout.Toggle(Phases[i].Visiable, GUILayout.Width(20.0f));
             EditorGUILayout.LabelField(Phases[i].Name);
             EditorGUILayout.EndHorizontal();
 
-            if (Visiable[i])
+            if (Phases[i].Visiable)
                 Phases[i].LocalPhase.Inspector(editor);
         }
     }
@@ -116,6 +114,7 @@ public class PhaseModule : Module
         public PhaseModule Module;
         public string Name;
         public int[] Index;
+        public bool Visiable;
         public PhaseFunction LocalPhase;
 
         public LocalPhaseFunction(string name, int[] index, PhaseModule module)
@@ -123,6 +122,7 @@ public class PhaseModule : Module
             Module = module;
             Name = name;
             Index = index;
+            Visiable = true;
             LocalPhase = new PhaseFunction(module);
         }
     }
