@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Blink : MonoBehaviour
+public class AutoBlink : MonoBehaviour
 {
-
     public bool isActive = true;                
     public SkinnedMeshRenderer ref_Face;
     public float ratio_Close = 85.0f; 
     public float ratio_HalfClose = 20.0f; 
+
     [HideInInspector]
     public float ratio_Open = 0.0f;
     private bool timerStarted = false;
@@ -19,7 +19,7 @@ public class Blink : MonoBehaviour
     public float threshold = 0.3f;
     public float interval = 3.0f;
 
-    private int blendShapeID = 3;
+    private int blendShapeID = 8;
     enum Status
     {
         Close,
@@ -88,7 +88,7 @@ public class Blink : MonoBehaviour
 
     void SetCloseEyes(float ratio_Close)
     {
-        ref_Face.SetBlendShapeWeight(8, ratio_Close);
+        ref_Face.SetBlendShapeWeight(blendShapeID, ratio_Close);
     }
 
 

@@ -392,8 +392,6 @@ public class MotionEditor : MonoBehaviour
 
                 for (int i = 0; i < Target.Data.Modules.Length; i++)
                     Target.Data.Modules[i].Inspector(Target);
-
-                EditorUtility.SetDirty(this);
             }
         }
     }

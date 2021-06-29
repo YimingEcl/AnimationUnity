@@ -80,6 +80,8 @@ public class TrajectoryModule : Module
     {
         Frame frame = editor.GetCurrentFrame();
         InitFrame(frame.Index);
+        if (Pivots[0].FloatHotVectors == null)
+            InitPivot();
         ComputePivot();
 
         SampleCount = EditorGUILayout.IntField("Sample Count", SampleCount);
@@ -190,8 +192,16 @@ public class TrajectoryModule : Module
             {
                 if (TModule.SampleFrame[i] < 1 || TModule.SampleFrame[i] > TModule.Data.GetTotalFrames())
                 {
-                    HotVectors[i] = "0 0 0";
-                    FloatHotVectors[i] = new float[3] { 0.0f, 0.0f, 0.0f };
+                    ActionModule module = (ActionModule)TModule.Data.GetModule(Module.ID.Action);
+                    HotVectors[i] = String.Empty;
+                    FloatHotVectors[i] = new float[module.Actions.Length];
+                    for(int j = 0; j < module.Actions.Length - 1; j++)
+                    {
+                        HotVectors[i] += "0 ";
+                        FloatHotVectors[i][j] = 0.0f;
+                    }
+                    HotVectors[i] += "0";
+                    FloatHotVectors[i][module.Actions.Length - 1] = 0.0f;
                 }                 
                 else
                 {

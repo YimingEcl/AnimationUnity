@@ -13,8 +13,8 @@ public class PhaseModule : Module
     public bool ShowKeys = true;
     public bool ShowCycle = true;
 
-    private bool[] Bones = null;
-    private bool Record = false;
+    public bool[] Bones = null;
+    public bool Record = false;
 
     public LocalPhaseFunction[] Phases = new LocalPhaseFunction[3];
 
@@ -76,7 +76,7 @@ public class PhaseModule : Module
         VelocityThreshold = EditorGUILayout.FloatField("Velocity Threshold", VelocityThreshold);
         PositionThreshold = EditorGUILayout.FloatField("Position Threshold", PositionThreshold);
 
-        if(Phases[0] == null || Record != Data.Mirrored)
+        if(Phases[0] == null || Phases[0].LocalPhase == null || Record != Data.Mirrored)
         {
             Phases[0] = new LocalPhaseFunction("Head", new int[2] { 4, 5 }, this);
             if (Data.Mirrored)

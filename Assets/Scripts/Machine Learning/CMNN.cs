@@ -239,6 +239,5 @@ public class CMNN : NativeNetwork
 		{
 			return index == 0 ? 1 : nn.Components[index - 1].YDim;
 		}
-
 	}
 }

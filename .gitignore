@@ -63,12 +63,3 @@ crashlytics-build.properties
 [Aa]ssets/MotionData/
 
 # Ingored meta file
-BVH.meta
-BVHOrigin.meta
-Export.meta
-Parameters.meta
-RawParameters.meta
-Resources.meta
-Scenes.meta
-New Folder.meta
-GitHub.meta

@@ -22,7 +22,7 @@ public class MyAnimation : NeuralAnimation
 	{
 		TimeSeries = new TimeSeries(6, 6, 1f, 1f, 5);
 		VelocitySeries = new TimeSeries.Velocity(TimeSeries);
-		ActionSeries = new TimeSeries.Action(TimeSeries, "Neutral", "LH on Hip", "RH on Hip");
+		ActionSeries = new TimeSeries.Action(TimeSeries, "Neutral", "CrossArms", "LH on Hip", "RH on Hip");
 		PhaseSeries = new TimeSeries.Phase(TimeSeries);
 		TrajectorySeries = new TimeSeries.Trajectory(TimeSeries);
 	}
@@ -38,9 +38,11 @@ public class MyAnimation : NeuralAnimation
 
 	public override void Read()
     {
+        // lazy way to match bones.
         string[] name = new string[] {"Hips", "Spine", "Spine1", "Spine2", "Neck", "Head", "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand",
                                       "RightShoulder", "RightArm", "RightForeArm", "RightHand", "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase",
                                       "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase"};
+
         Vector3[] positions = new Vector3[name.Length];
         Vector3[] forwards = new Vector3[name.Length];
         Vector3[] upwards = new Vector3[name.Length];

@@ -79,8 +79,8 @@ public class MotionExporter : MonoBehaviour
                         case Module.ID.Phase:
                             {
                                 PhaseModule module = (PhaseModule)data.GetModule(Module.ID.Phase);
-                                result[i - 30] += module.Phases[0].LocalPhase.Phase[i] + " ";
                                 result[i - 30] += module.Phases[1].LocalPhase.Phase[i] + " ";
+                                result[i - 30] += module.Phases[2].LocalPhase.Phase[i] + " ";
                                 break;
                             }
 
@@ -186,8 +186,6 @@ public class MotionExporter : MonoBehaviour
                     case Module.ID.Velocity:
                         {
                             VelocityModule module = (VelocityModule)data.GetModule(Module.ID.Velocity);
-                            module.GetTransformations(data.GetFrame(0));
-                            module.GetVelocities(data.GetFrame(0), 1.0f);
                             for (int j = 0; j < data.Root.Bones.Length; j++)
                             {
                                 if (module.Selected[j])
@@ -213,6 +211,7 @@ public class MotionExporter : MonoBehaviour
                         {
                             ActionModule module = (ActionModule)data.GetModule(Module.ID.Action);
                             ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action Neutral");
+                            ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action CrossArms");
                             ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action LHOnHip");
                             ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Action RHOnHip");
 
@@ -248,6 +247,8 @@ public class MotionExporter : MonoBehaviour
                                         module.Pivots[j].Name + "Trajectory" + p.ToString() + "VelocityZ");
                                     ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
                                         module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action Neutral");
+                                    ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
+                                        module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action CrossArms");
                                     ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +
                                         module.Pivots[j].Name + "Trajectory" + p.ToString() + "Action LHOnHip");
                                     ArrayExtensions.Add(ref Lines, "[" + Lines.Length.ToString() + "] " + "Pivot" + j.ToString() +

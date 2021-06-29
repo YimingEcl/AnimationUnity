@@ -26,11 +26,9 @@ public class ActionModule : Module
     public void DefaultAction()
     {
         ArrayExtensions.Add(ref Actions, new Action(this, "Neutral"));
-        ArrayExtensions.Add(ref Actions, new Action(this, "Cross Hands"));
         ArrayExtensions.Add(ref Actions, new Action(this, "Cross Arms"));
         ArrayExtensions.Add(ref Actions, new Action(this, "LH on Hip"));
         ArrayExtensions.Add(ref Actions, new Action(this, "RH on Hip"));
-        ArrayExtensions.Add(ref Actions, new Action(this, "Thank"));
     }
 
     public void AddAction(string name)
@@ -108,21 +106,30 @@ public class ActionModule : Module
                     break;
                 }
 
-                case "LH on Hip":
+                case "Cross Arms":
                 {
                     if (Actions[i].Values[index] > 0)
                         result[1] = 1.0f;
                     else
-                        result[1] = 0.0f;
+                       result[1] = 0.0f;
+                    break;
+                }
+
+                case "LH on Hip":
+                {
+                    if (Actions[i].Values[index] > 0)
+                        result[2] = 1.0f;
+                    else
+                        result[2] = 0.0f;
                     break;
                 }
 
                 case "RH on Hip":
                 {
                     if (Actions[i].Values[index] > 0)
-                        result[2] = 1.0f;
+                        result[3] = 1.0f;
                     else
-                        result[2] = 0.0f;
+                        result[3] = 0.0f;
                     break;
                 }
             }
@@ -134,38 +141,47 @@ public class ActionModule : Module
     public string GetHotVector(int index)
     {
         string result = string.Empty;
-        float[] Labels = new float[3];
+        float[] Labels = new float[Actions.Length];
 
         for (int i = 0; i < Actions.Length; i++)
         {
             switch (Actions[i].Name)
             {
                 case "Neutral":
-                    {
-                        if (Actions[i].Values[index] > 0)
-                            Labels[0] = 1.0f;
-                        else
-                            Labels[0] = 0.0f;
-                        break;
-                    }
+                {
+                    if (Actions[i].Values[index] > 0)
+                        Labels[0] = 1.0f;
+                    else
+                        Labels[0] = 0.0f;
+                    break;
+                }
+
+                case "Cross Arms":
+                {
+                    if (Actions[i].Values[index] > 0)
+                        Labels[1] = 1.0f;
+                    else
+                        Labels[1] = 0.0f;
+                    break;
+                }
 
                 case "LH on Hip":
-                    {
-                        if (Actions[i].Values[index] > 0)
-                            Labels[1] = 1.0f;
-                        else
-                            Labels[1] = 0.0f;
-                        break;
-                    }
+                {
+                    if (Actions[i].Values[index] > 0)
+                        Labels[2] = 1.0f;
+                    else
+                        Labels[2] = 0.0f;
+                    break;
+                }
 
                 case "RH on Hip":
-                    {
-                        if (Actions[i].Values[index] > 0)
-                            Labels[2] = 1.0f;
-                        else
-                            Labels[2] = 0.0f;
-                        break;
-                    }
+                {
+                    if (Actions[i].Values[index] > 0)
+                        Labels[3] = 1.0f;
+                    else
+                        Labels[3] = 0.0f;
+                    break;
+                }
             }
         }
 
