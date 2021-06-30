@@ -16,3 +16,8 @@ Video link: https://youtu.be/0KKp99DVMAo
 Build neural network model in Unity and generate character motion automatically with test data. 
 
 Video link: https://youtu.be/V0khXztM8gA
+
+## Lip Sync
+Customize timeline to generate lip sync animation automatically.
+
+Video link: https://youtu.be/EwdB4aw_MC0
