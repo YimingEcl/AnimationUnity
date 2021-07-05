@@ -6,12 +6,16 @@ using UnityEngine.Playables;
 
 public class AutoGenerate : MonoBehaviour
 {
-    public LabelTrack AiueoTrack = null;
-    LabelTrack BlinkTrack = null;
-    BlendShapeTrack AiueoShapeTrack = null;
-    BlendShapeTrack BlinkShapeTrack = null;
-    BlendShapeTrack UpperTeethShapeTracK = null;
-    BlendShapeTrack ButtomTeethShapeTracK = null;
+    public float Min = 0.0f;
+    public float Max = 1.0f;
+    public double interval = 3.0d;
+
+    private LabelTrack AiueoTrack = null;
+    private LabelTrack BlinkTrack = null;
+    private BlendShapeTrack AiueoShapeTrack = null;
+    private BlendShapeTrack BlinkShapeTrack = null;
+    private BlendShapeTrack UpperTeethShapeTracK = null;
+    private BlendShapeTrack ButtomTeethShapeTracK = null;
 
     private PlayableDirector Director = null;
     private TimelineAsset MyTimelineAsset = null;

@@ -7,6 +7,7 @@ public class DialogueBehaviour : PlayableBehaviour
 {
     //public string CharacterName = string.Empty;
     public string Text = string.Empty;
+    public string output = string.Empty;
     public bool hasPause = false; 
 
     private PlayableDirector Director = null;
@@ -30,7 +31,7 @@ public class DialogueBehaviour : PlayableBehaviour
                 isPause = true;
             }
 
-            Tmp.SetText(Text);
+            Tmp.SetText(Text, true);
         }
     }
 
