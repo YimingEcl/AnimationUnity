@@ -10,9 +10,14 @@ Add data process modules.
 Calculate possible loop motion phase.
 ![Phase](https://media.githubusercontent.com/media/YimingEcl/AnimationUnity/master/Assets/ScreenShots/Phase.png)
 
-Video link: https://youtu.be/2lUqjrINxos
+Video link: https://youtu.be/0KKp99DVMAo
 
 ## Runtime
 Build neural network model in Unity and generate character motion automatically with test data. 
 
 Video link: https://youtu.be/V0khXztM8gA
+
+## Lip Sync
+Customize timeline to generate lip sync animation automatically.
+
+Video link: https://youtu.be/EwdB4aw_MC0
