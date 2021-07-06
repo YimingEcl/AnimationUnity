@@ -192,6 +192,15 @@ public class Actor : MonoBehaviour
 		return System.Array.Find(Bones, x => x.Name.Contains(name));
 	}
 
+	public string[] GetBoneNames()
+    {
+		string[] names = new string[Bones.Length];
+		for(int i = 0; i < Bones.Length; i++)
+			names[i] = Bones[i].Name;
+
+		return names;
+    }
+
 	[Serializable]
 	public class Bone
 	{
@@ -265,6 +274,11 @@ public class Actor : MonoBehaviour
 				Transform.position = GetParent().Transform.position + Length * (Transform.position - GetParent().Transform.position).normalized;
 			}
 		}
+
+		public Actor GetActor()
+        {
+			return Actor;
+        }
 	}
 
 	[CustomEditor(typeof(Actor))]
