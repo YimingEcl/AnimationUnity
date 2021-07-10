@@ -11,8 +11,8 @@ public class Actor : MonoBehaviour
 	public bool DrawVelocities = true;
 	public bool DrawTransforms = true;
 	public bool TargetRoot = true;
+	public float BoneSize = 0.035f;
 
-	private float BoneSize = 0.035f;
 	private Color BoneColor = Color.cyan;
 	private Color JointColor = Color.red;
     private void Reset()
@@ -60,7 +60,7 @@ public class Actor : MonoBehaviour
 					UltiDraw.DrawSphere(
 						bone.Transform.position,
 						Quaternion.identity,
-						5f / 8f * BoneSize,
+						3f / 8f * BoneSize,
 						jointColor.Transparent(alpha)
 					);
 				}
@@ -299,6 +299,7 @@ public class Actor : MonoBehaviour
 			Target.DrawVelocities = EditorGUILayout.Toggle("Draw Velocities", Target.DrawVelocities);
 			Target.DrawTransforms = EditorGUILayout.Toggle("Draw Transforms", Target.DrawTransforms);
 			Target.TargetRoot = EditorGUILayout.Toggle("Set Root by BVH Data", Target.TargetRoot);
+			Target.BoneSize = EditorGUILayout.FloatField("Bone Size:", Target.BoneSize);
 			using (new EditorGUILayout.VerticalScope("Box"))
 			{
 				EditorGUILayout.BeginHorizontal();
