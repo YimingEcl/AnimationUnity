@@ -59,6 +59,9 @@ public class LookAtController : MonoBehaviour
             }
             else if (Mathf.Abs(angle) <= MaxHeadAngle)
             {
+                LeftEye.localRotation = Quaternion.Slerp(LeftEye.localRotation, Quaternion.identity, 2.0f * Time.deltaTime);
+                RightEye.localRotation = Quaternion.Slerp(RightEye.localRotation, Quaternion.identity, 2.0f * Time.deltaTime);
+
                 // head joint
                 RotateJoint(Head, forwardAngle, forwardAxis, upAngle, upAxis, 1.0f - NeckWeight - BodyWeight, Speed);
 
@@ -106,7 +109,7 @@ public class LookAtController : MonoBehaviour
         Quaternion upRotation = Quaternion.AngleAxis(angle, axis);
 
         Quaternion rotation = forwardRotation * upRotation;
-        joint.rotation = Quaternion.Slerp(joint.rotation, rotation, Speed * Time.deltaTime);
+        joint.rotation = Quaternion.Slerp(joint.rotation, rotation, 0.5f * Speed * Time.deltaTime);
     }
 
     private void RotateHeadBack()
