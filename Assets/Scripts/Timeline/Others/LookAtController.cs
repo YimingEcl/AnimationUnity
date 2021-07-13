@@ -59,9 +59,6 @@ public class LookAtController : MonoBehaviour
             }
             else if (Mathf.Abs(angle) <= MaxHeadAngle)
             {
-                RotateJoint(LeftEye, forwardAngle, forwardAxis, upAngle, upAxis, 1.0f - NeckWeight - BodyWeight, 2.0f * Speed);
-                RotateJoint(RightEye, forwardAngle, forwardAxis, upAngle, upAxis, 1.0f - NeckWeight - BodyWeight, 2.0f * Speed);
-
                 // head joint
                 RotateJoint(Head, forwardAngle, forwardAxis, upAngle, upAxis, 1.0f - NeckWeight - BodyWeight, Speed);
 
