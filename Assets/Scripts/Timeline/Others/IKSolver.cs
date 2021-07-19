@@ -141,6 +141,7 @@ public class IKSolver : MonoBehaviour
                 Vector3 oldToward = originPos[i + 1] - originPos[i];
                 Vector3 newToward = MyActor.Bones[indices[i + 1]].Transform.position - MyActor.Bones[indices[i]].Transform.position;
                 float rotationAngle = Vector3.Angle(oldToward, newToward);
+                Debug.Log(rotationAngle);
                 if (rotationAngle > 1.0e-5f)
                 {
                     Vector3 rotationAxis = Vector3.Cross(oldToward, newToward);
@@ -150,6 +151,7 @@ public class IKSolver : MonoBehaviour
             }
         }
     }
+
 
     //public void ParticleIK()
     //{
