@@ -8,6 +8,7 @@ public class TwoBoneIKSolver : MonoBehaviour
     public Transform Target;
     public Transform Pole;
 
+
     private void Update()
     {
         Vector3 a = Root.position;
@@ -29,7 +30,7 @@ public class TwoBoneIKSolver : MonoBehaviour
 
         Vector3 axis0 = Vector3.Normalize(Vector3.Cross(c - a, b - a));
 
-        // set bend direction to pole
+        // fix bend direction to pole
         if (axis0.magnitude == 0)
             axis0 = Vector3.Normalize(Vector3.Cross(c - a, pole - b));
 
@@ -43,5 +44,15 @@ public class TwoBoneIKSolver : MonoBehaviour
         Vector3 axis1 = Vector3.Normalize(Vector3.Cross(c - a, target - a));
         Quaternion rotation2 = Quaternion.AngleAxis(angleAC_AT1, Quaternion.Inverse(Root.rotation) * axis1);
         Root.localRotation *= rotation2;
+
+        // rotate to pole
+        Vector3 pole2B = new Vector3(pole.x, b.y, pole.z);
+        Vector3 d = a + Vector3.Normalize(c - a) * (lenAB * Mathf.Cos(angleAB_AC1 * Mathf.Deg2Rad)); // project Middle to line AC.
+        Vector3 b1 = d + Vector3.Normalize(pole2B - d) * lenAB * Mathf.Sin(angleAB_AC1 * Mathf.Deg2Rad);
+
+        float angleAB_AB1 = Vector3.Angle(Vector3.Normalize(b - a), Vector3.Normalize(b1 - a));
+        Vector3 axis2 = Vector3.Normalize(Vector3.Cross(b - a, b1 - a));
+        Quaternion rotation3 = Quaternion.AngleAxis(angleAB_AB1, Quaternion.Inverse(Root.rotation) * axis2);
+        Root.localRotation *= rotation3;
     }
 }
