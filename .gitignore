@@ -37,6 +37,17 @@ ExportedObj/
 *.pdb.meta
 *.mdb.meta
 
+# Ignored meta files
+BVH.meta
+BVHOrigin.meta
+Export.meta
+MotionData.meta
+Parameters.meta
+RawParameters.meta
+Resources.meta
+Scenes.meta
+GitHub.meta
+
 # Unity3D generated file on crash reports
 sysinfo.txt
 
