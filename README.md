@@ -21,3 +21,10 @@ Video link: https://youtu.be/V0khXztM8gA
 Customize timeline to generate lip sync animation automatically.
 
 Video link: https://youtu.be/EwdB4aw_MC0
+
+## IK
+Implement FABRIK and CCD IK.
+
+Look At: https://youtu.be/fmPdRsktfJU
+Two Bone IK: https://youtu.be/sx-wN-Id31M
+FABRIK for fingers: https://youtu.be/XmXXRfrXyTs
