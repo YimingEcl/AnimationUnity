@@ -8,7 +8,6 @@ public class TwoBoneIKSolver : MonoBehaviour
     public Transform Target;
     public Transform Pole;
 
-
     private void Update()
     {
         Vector3 a = Root.position;

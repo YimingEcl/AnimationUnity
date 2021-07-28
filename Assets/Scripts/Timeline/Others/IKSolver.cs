@@ -76,6 +76,7 @@ public class IKSolver : MonoBehaviour
         int rootIndex = Chains[index].RootIndex;
         int effectorIndex = Chains[index].EffectorIndex;
         Vector3 targetPos = Chains[index].TargetObject.transform.position;
+        //Vector3 polePos = Chains[index].PoleObject.transform.position;
         Vector3 rootPos = MyActor.Bones[rootIndex].Transform.position;
         Vector3 effectorPos = MyActor.Bones[effectorIndex].Transform.position;
 
@@ -140,16 +141,36 @@ public class IKSolver : MonoBehaviour
             {
                 Vector3 oldToward = originPos[i + 1] - originPos[i];
                 Vector3 newToward = MyActor.Bones[indices[i + 1]].Transform.position - MyActor.Bones[indices[i]].Transform.position;
-                float rotationAngle = Vector3.Angle(oldToward, newToward);
-                Debug.Log(rotationAngle);
-                if (rotationAngle > 1.0e-5f)
+                float angle = Vector3.Angle(oldToward, newToward);
+                if (angle > 1.0e-5f)
                 {
-                    Vector3 rotationAxis = Vector3.Cross(oldToward, newToward);
-                    MyActor.Bones[indices[i]].Transform.RotateAround(MyActor.Bones[indices[i]].Transform.position, rotationAxis, rotationAngle);
-                    MyActor.Bones[indices[i + 1]].Transform.RotateAround(MyActor.Bones[indices[i]].Transform.position, rotationAxis, -rotationAngle);
+                    Vector3 axis = Vector3.Cross(oldToward, newToward);
+                    MyActor.Bones[indices[i]].Transform.RotateAround(MyActor.Bones[indices[i]].Transform.position, axis, angle);
+                    MyActor.Bones[indices[i + 1]].Transform.RotateAround(MyActor.Bones[indices[i]].Transform.position, axis, -angle);
                 }
             }
         }
+
+        // rotate to pole test
+        //if (Chains[index].PoleObject != null && Vector3.Distance(targetPos, rootPos) < totalLength)
+        //{
+        //    int middleIndex = (rootIndex + effectorIndex) / 2;
+        //    Vector3 middlePos0 = MyActor.Bones[middleIndex].Transform.position;
+        //    Vector3 pole2Middle = new Vector3(polePos.x, middlePos0.y, polePos.z);
+        //    float angle0 = Vector3.Angle(Vector3.Normalize(effectorPos - rootPos), Vector3.Normalize(middlePos0 - rootPos)) * Mathf.Deg2Rad;
+        //    float lenM2R = Vector3.Distance(rootPos, middlePos0);
+        //    Vector3 p = rootPos + Vector3.Normalize(effectorPos - rootPos) * lenM2R * Mathf.Cos(angle0);
+        //    Vector3 middlePos1 = p + Vector3.Normalize(pole2Middle - p) * lenM2R * Mathf.Sin(angle0);
+
+        //    Debug.DrawLine(rootPos, middlePos0, Color.green);
+        //    Debug.DrawLine(rootPos, middlePos1, Color.red);
+        //    Debug.DrawLine(rootPos, effectorPos);
+
+        //    float angle1 = Vector3.Angle(Vector3.Normalize(middlePos0 - rootPos), Vector3.Normalize(middlePos1 - rootPos));
+        //    Vector3 axis = Vector3.Cross(middlePos0 - rootPos, middlePos1 - rootPos);
+        //    Quaternion rotation = Quaternion.AngleAxis(angle1, Quaternion.Inverse(MyActor.Bones[rootIndex].Transform.rotation) * axis);
+        //    MyActor.Bones[rootIndex].Transform.localRotation *= rotation;
+        //}
     }
 
 
@@ -182,6 +203,7 @@ public class IKSolver : MonoBehaviour
     public class IKChain
     {
         public GameObject TargetObject = null;
+        //public GameObject PoleObject = null;
         public int RootIndex = 0;
         public int EffectorIndex = 0;
         public int[] JointIndices;
@@ -242,7 +264,12 @@ public class IKSolver : MonoBehaviour
 
                         Target.Chains[i].RootIndex = EditorGUILayout.Popup("Root Joint", Target.Chains[i].RootIndex, BoneNames);
                         Target.Chains[i].EffectorIndex = EditorGUILayout.Popup("Effector Joint:", Target.Chains[i].EffectorIndex, BoneNames);
+                        
                         Target.Chains[i].TargetObject = EditorGUILayout.ObjectField("Target:", Target.Chains[i].TargetObject, typeof(GameObject), true) as GameObject;
+                        //if(Target.SolverType == 0)
+                        //{
+                        //    Target.Chains[i].PoleObject = EditorGUILayout.ObjectField("Pole:", Target.Chains[i].PoleObject, typeof(GameObject), true) as GameObject;
+                        //}
                     }
                 }
             }

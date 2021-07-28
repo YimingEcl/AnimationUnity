@@ -38,7 +38,7 @@ public class LookAtController : MonoBehaviour
         if (target != null)
         {
             Vector3 targetForward = Vector3.Normalize(target.transform.position - Position);
-            Vector3 targetUp = Vector3.Normalize(Vector3.Cross(Right, targetForward));
+            Vector3 targetUp = Vector3.Normalize(Vector3.Cross(targetForward, Right));
             if (Vector3.Dot(targetUp, Vector3.up) < 0)
                 targetUp = -1.0f * targetUp;
             float angle = Vector3.Angle(Forward, targetForward);
@@ -87,27 +87,27 @@ public class LookAtController : MonoBehaviour
     private void RotateJoint(Transform joint, float forwardAngle, Vector3 forwardAxis, float upAngle, Vector3 upAxis, float weight, float speed)
     {
         float jointForwardAngle = forwardAngle * weight;
-        Quaternion forwardRotation = Quaternion.AngleAxis(jointForwardAngle, forwardAxis);
+        Quaternion forwardRotation = Quaternion.AngleAxis(jointForwardAngle, Quaternion.Inverse(joint.rotation) * forwardAxis);
 
         float jointUpAngle = upAngle * weight;
-        Quaternion upRotation = Quaternion.AngleAxis(jointUpAngle, upAxis);
+        Quaternion upRotation = Quaternion.AngleAxis(jointUpAngle, Quaternion.Inverse(joint.rotation) * upAxis);
 
-        Quaternion rotation = forwardRotation * upRotation;
-        joint.rotation = Quaternion.Slerp(joint.rotation, rotation, speed * Time.deltaTime);
+        Quaternion rotation = joint.localRotation * forwardRotation * upRotation;
+        joint.localRotation = Quaternion.Slerp(joint.localRotation, rotation, speed * Time.deltaTime);
     }
 
     private void RotateJointBack(Transform joint)
     {
-        float angle = Vector3.Angle(joint.forward, Vector3.forward);
-        Vector3 axis = Vector3.Cross(joint.forward, Vector3.forward);
-        Quaternion forwardRotation = Quaternion.AngleAxis(angle, axis);
+        float angle = Vector3.Angle(joint.forward, Forward);
+        Vector3 axis = Vector3.Cross(joint.forward, Forward);
+        Quaternion forwardRotation = Quaternion.AngleAxis(angle, Quaternion.Inverse(joint.rotation) * axis);
 
-        angle = Vector3.Angle(joint.up, Vector3.up);
-        axis = Vector3.Cross(joint.up, Vector3.up);
-        Quaternion upRotation = Quaternion.AngleAxis(angle, axis);
+        angle = Vector3.Angle(joint.up, Up);
+        axis = Vector3.Cross(joint.up, Up);
+        Quaternion upRotation = Quaternion.AngleAxis(angle, Quaternion.Inverse(joint.rotation) * axis);
 
-        Quaternion rotation = forwardRotation * upRotation;
-        joint.rotation = Quaternion.Slerp(joint.rotation, rotation, 0.5f * Speed * Time.deltaTime);
+        Quaternion rotation = joint.localRotation * forwardRotation * upRotation;
+        joint.localRotation = Quaternion.Slerp(joint.localRotation, rotation, 0.5f * Speed * Time.deltaTime);
     }
 
     private void RotateHeadBack()
@@ -123,8 +123,8 @@ public class LookAtController : MonoBehaviour
 
     private void RotateEyeBack()
     {
-        LeftEye.rotation = Quaternion.Slerp(LeftEye.rotation, Quaternion.identity, 3.0f * Speed * Time.deltaTime);
-        RightEye.rotation = Quaternion.Slerp(RightEye.rotation, Quaternion.identity, 3.0f * Speed * Time.deltaTime);
+        LeftEye.localRotation = Quaternion.Slerp(LeftEye.localRotation, Quaternion.identity, 3.0f * Speed * Time.deltaTime);
+        RightEye.localRotation = Quaternion.Slerp(RightEye.localRotation, Quaternion.identity, 3.0f * Speed * Time.deltaTime);
     }
 
     private GameObject DetectNearestObject()
