@@ -23,6 +23,48 @@ public class MotionEditor : MonoBehaviour
         public Transform ActorBoneTransform;
     }
 
+    private void OnRenderObject()
+    {
+        if(Data != null)
+        {
+            Draw();
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!Application.isPlaying && Data != null)
+            OnRenderObject();
+    }
+
+    public void Draw()
+    {
+        UltiDraw.Begin();
+
+        TrajectoryModule module = (TrajectoryModule)Data.GetModule(Module.ID.Trajectory);
+        Vector3[] positions = new Vector3[module.SampleCount];
+        if (module != null)
+        {
+            for (int i = 0; i < module.Pivots.Length; i++)
+            {
+                if (module.Selected[i] && module.Drawed)
+                {
+                    positions[0] = module.Pivots[i].Transformations[0].GetPosition();
+                    UltiDraw.DrawSphere(positions[0], Quaternion.identity, 0.01f, Color.black);
+
+                    for (int j = 1; j < positions.Length; j++)
+                    {
+                        positions[j] = module.Pivots[i].Transformations[j].GetPosition();
+                        UltiDraw.DrawSphere(positions[j], Quaternion.identity, 0.01f, Color.black);
+                        UltiDraw.DrawLine(positions[j - 1], positions[j], Color.black);
+                    }
+                }
+            }
+        }
+
+        UltiDraw.End();
+    }
+
     public void AutoMap()
     {
         Map = new BoneMap[Data.Root.Bones.Length];

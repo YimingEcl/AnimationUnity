@@ -12,6 +12,7 @@ public class TrajectoryModule : Module
     public PivotBone[] Pivots;
     public string[] PartName;
     public bool[] Selected;
+    public bool Drawed;
 
     public override ID GetID()
     {
@@ -27,6 +28,7 @@ public class TrajectoryModule : Module
         Pivots = new PivotBone[2];
         PartName = new string[2] {"Left Hand", "Right Hand" };
         Selected = new bool[Pivots.Length];
+        Drawed = true;
 
         InitPivot();
 
@@ -86,6 +88,7 @@ public class TrajectoryModule : Module
 
         SampleCount = EditorGUILayout.IntField("Sample Count", SampleCount);
         SampleSize = EditorGUILayout.IntField("Sample Size", SampleSize);
+        Drawed = EditorGUILayout.Toggle("Draw Trajectory", Drawed);
 
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Enable All"))

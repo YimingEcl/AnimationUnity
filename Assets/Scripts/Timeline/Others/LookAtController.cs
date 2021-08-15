@@ -31,7 +31,7 @@ public class LookAtController : MonoBehaviour
             Position = (LeftEye.position + RightEye.position) / 2.0f;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         GameObject target = DetectNearestObject();
 
